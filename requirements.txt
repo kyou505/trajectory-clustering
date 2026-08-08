@@ -1,0 +1,9 @@
+torch
+numpy
+pandas
+tables
+scipy
+scikit-learn
+matplotlib
+tqdm
+pytest
