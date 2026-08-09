@@ -271,64 +271,15 @@ def train_condtc(
     return model, history
 
 
-def test():
-    from pathlib import Path
-    from torch.utils.data import DataLoader
-    from src.cluster_init import ( extract_trajectory_embeddings, initialize_cluster_centers )
-    from src.data_loader import ( create_contrastive_data_loader )
-    from src.data_process import ( QDTrajectoryDataset )
-    from src.models.contrastive_model import ( ContrastiveTrajectoryModel )
-
-    torch.manual_seed(42)
-    device = get_device()
-    print("device:", device)
-    project_dir = Path(__file__).resolve().parent.parent
-    checkpoint_path = project_dir / "checkpoints" / "sttraj2vec_pretrain_best.pt"
-    model = ContrastiveTrajectoryModel(num_clusters=12).to(device)
-    model.load_pretrained_components(checkpoint_path, map_location=device)
-    # 本地只使用128条轨迹测试K-means流程
-    base_loader = DataLoader(
-        QDTrajectoryDataset(),
-        batch_size=64,
-        shuffle=False,
-        num_workers=0,
-    )
-    embeddings, _ = extract_trajectory_embeddings(
-        model=model,
-        loader=base_loader,
-        device=device,
-        max_batches=2,
-    )
-    initialize_cluster_centers(
-        model=model,
-        embeddings=embeddings,
-        num_clusters=12,
-        seed=42,
-    )
-    optimizer = create_optimizer(model)
-    criterion = ConDTCTotalLoss(
-        time_loss_weight=0.1,
-        clustering_loss_weight=0.5,
-    )
-    train_loader = create_contrastive_data_loader(
-        batch_size=8,
-        seed=42,
-        shuffle=True,
-    )
-    batch = next(iter(train_loader))
-    centers_before = model.clustering_layer.cluster_centers.detach().clone()
-    encoder_before = model.encoder.embedding.location_embedding.weight.detach().clone()
-    epoch_metrics = train_one_epoch(
-        model=model,
-        loader=train_loader,
-        criterion=criterion,
-        optimizer=optimizer,
-        device=device,
-        max_batches=3,
-        log_interval=1,
-    )
-    print("metrics:", epoch_metrics)
 
 
 if __name__ == "__main__":
-    test()
+    train_condtc(
+        num_epochs=1,
+        batch_size=8,
+        initialization_batch_size=64,
+        max_initialization_batches=2,
+        max_train_batches=3,
+        log_interval=1,
+        checkpoint_name="condtc_smoke.pt",
+    )
