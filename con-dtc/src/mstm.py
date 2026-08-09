@@ -1,7 +1,7 @@
 from torch.utils.data import Dataset
 import torch
 
-from .data_process import QDTrajectoryDataset
+from src.data_process import QDTrajectoryDataset
 
 class MSTMDataset(Dataset):
     def __init__(
