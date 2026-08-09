@@ -21,9 +21,9 @@ def create_data_loaders(
         generator=torch.Generator().manual_seed(seed)
     )
     
-    train_dataset = MSTMDataset(train_base)
-    valid_dataset = MSTMDataset(valid_base)
-    test_dataset = MSTMDataset(test_base)
+    train_dataset = MSTMDataset(train_base, deterministic=False)
+    valid_dataset = MSTMDataset(valid_base, deterministic=True, seed=seed + 10_000)
+    test_dataset = MSTMDataset(test_base, deterministic=True, seed=seed + 20_000)
     
     train_loader = DataLoader(
         train_dataset,

@@ -9,12 +9,16 @@ class MSTMDataset(Dataset):
         base_dataset,
         mask_ratio=0.15,
         location_vocab_size=148,
-        time_vocab_size=1444
+        time_vocab_size=1444,
+        deterministic= False, # 来控制 MSTM 的随机遮盖是否固定
+        seed=0
     ):
         self.base_dataset = base_dataset
         self.mask_ratio = mask_ratio
         self.location_vocab_size = location_vocab_size
         self.time_vocab_size = time_vocab_size
+        self.deterministic = deterministic
+        self.seed = seed
 
     def __len__(self):
         return len(self.base_dataset)
@@ -41,7 +45,11 @@ class MSTMDataset(Dataset):
         num_masked = max(1, int(num_candidate * self.mask_ratio)) # 保证轨迹再短也至少mask一个点
         
         # 随机生成mask的位置
-        permutation = torch.randperm(num_candidate)
+        generator = None
+        if self.deterministic:
+            generator = torch.Generator()
+            generator.manual_seed(self.seed + idx)
+        permutation = torch.randperm(num_candidate, generator=generator)
         masked_positions = candidate_positions[permutation[:num_masked]]
         
         # 把答案填进target
@@ -49,7 +57,10 @@ class MSTMDataset(Dataset):
         time_targets[masked_positions] = original_times[masked_positions]
         
         for position in masked_positions:
-            probability = torch.rand(1).item()
+            probability = torch.rand(
+                (),
+                generator=generator,
+            ).item()
             if probability < 0.8:
                 # 80%：替换为空间和时间 MASK
                 mask_locations[position] = 3
@@ -59,12 +70,14 @@ class MSTMDataset(Dataset):
                 mask_locations[position] = torch.randint(
                     low=4, # 0 - 3是特殊token
                     high=self.location_vocab_size,
-                    size=(1,)
+                    size=(1,),
+                    generator=generator
                 )
                 mask_times[position] = torch.randint(
                     low=4,
                     high=self.time_vocab_size,
-                    size=(1,)
+                    size=(1,),
+                    generator=generator
                 )
             else:
                 pass

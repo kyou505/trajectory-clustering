@@ -150,10 +150,12 @@ def train_one_epoch(
         processed_batches += 1
         if (log_interval is not None and (processed_batches) % log_interval == 0):
             print(
-                f" batch={batch_index:04d}"
-                f" loss={losses['loss'].item():.4f}""]}"
+                f" batch={processed_batches:04d}"
+                f" loss={losses['loss'].item():.4f}"
             )
 
+    if processed_batches == 0:
+        raise RuntimeError("No batches were processed during training")
     average_location_loss = location_loss_sum / location_total
     average_time_loss = time_loss_sum / time_total
     average_total_loss = average_location_loss + average_time_loss * criterion.time_loss_weight
