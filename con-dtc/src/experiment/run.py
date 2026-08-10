@@ -84,7 +84,26 @@ def main():
     print("experiment initialized")
     print("run directory:", run_dir)
     print("config snapshot:", config_snapshot)
-    train_condtc()
+    train_condtc(
+        num_epochs=config.training.num_epochs,
+        batch_size=config.data.batch_size,
+        initialization_batch_size=config.data.initialization_batch_size,
+        num_clusters=config.model.num_clusters,
+        time_loss_weight=config.loss.time_loss_weight,
+        clustering_loss_weight=config.loss.clustering_loss_weight,
+        instance_temperature=config.loss.instance_temperature,
+        cluster_temperature=config.loss.cluster_temperature,
+        instance_loss_weight=config.loss.instance_loss_weight,
+        cluster_contrastive_loss_weight=config.loss.cluster_contrastive_loss_weight,
+        representation_learning_rate=config.optimizer.representation_learning_rate,
+        clustering_learning_rate=config.optimizer.clustering_learning_rate,
+        weight_decay=config.optimizer.weight_decay,
+        seed=config.training.seed,
+        max_initialization_batches=config.training.max_initialization_batches,
+        max_train_batches=config.training.max_train_batches,
+        log_interval=config.training.log_interval,
+        checkpoint_name=config.checkpoint.filename,
+    )
 
 
 if __name__ == "__main__":

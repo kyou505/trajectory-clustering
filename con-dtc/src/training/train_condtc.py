@@ -199,7 +199,7 @@ def train_condtc(
         torch.cuda.manual_seed_all(seed)
     device = get_device()
     print("device:", device)
-    project_dir = Path(__file__).resolve().parent.parent
+    project_dir = Path(__file__).resolve().parents[2]
     pretrain_checkpoint_path = project_dir / "checkpoints" / "sttraj2vec_pretrain_best.pt"
     checkpoint_dir = project_dir / "checkpoints"
     checkpoint_dir.mkdir(

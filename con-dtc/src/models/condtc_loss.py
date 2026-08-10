@@ -140,7 +140,7 @@ def test():
         shuffle=False,
     )
     batch = next(iter(loader))
-    project_dir = Path(__file__).resolve().parent.parent
+    project_dir = Path(__file__).resolve().parents[2]
     checkpoint_path = project_dir / "checkpoints" / "sttraj2vec_pretrain_best.pt"
     model = ContrastiveTrajectoryModel(num_clusters=12).to(device)
     model.load_pretrained_components(

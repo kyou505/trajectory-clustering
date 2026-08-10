@@ -119,7 +119,7 @@ def test():
     )
 
     device = torch.device("cpu")
-    project_dir = Path(__file__).resolve().parent.parent
+    project_dir = Path(__file__).resolve().parents[2]
     checkpoint_path = (project_dir / "checkpoints" / "sttraj2vec_pretrain_best.pt")
     dataset = QDTrajectoryDataset()
     subset = Subset(dataset, range(128))

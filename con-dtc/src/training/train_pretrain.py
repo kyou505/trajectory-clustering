@@ -312,7 +312,7 @@ def pretrain(
         lr=learning_rate,
         weight_decay=weight_decay,
     )
-    project_dir = Path(__file__).resolve().parent.parent
+    project_dir = Path(__file__).resolve().parents[2]
     checkpoint_dir = project_dir / "checkpoints"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_path = checkpoint_dir / "sttraj2vec_pretrain_best.pt"
