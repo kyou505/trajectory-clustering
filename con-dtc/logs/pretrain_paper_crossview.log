@@ -1,0 +1,271 @@
+/root/miniconda3/lib/python3.12/site-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  import pynvml  # type: ignore[import]
+Epoch 1 of 30
+ batch=0050 loss=3.8201
+ batch=0100 loss=2.8961
+ batch=0150 loss=2.4288
+ batch=0200 loss=2.1779
+ batch=0250 loss=1.9927
+Train: loss=2.8141 loc_loss=2.2434 time_loss=5.7074 loc_acc=0.3561 time_acc=0.0199
+Valid: loss=1.8433 loc_loss=1.3839 time_loss=4.5936 loc_acc=0.4790 time_acc=0.0396
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 2 of 30
+ batch=0050 loss=1.7456
+ batch=0100 loss=1.7950
+ batch=0150 loss=1.7531
+ batch=0200 loss=1.7786
+ batch=0250 loss=1.6647
+Train: loss=1.7951 loc_loss=1.3580 time_loss=4.3709 loc_acc=0.4721 time_acc=0.0450
+Valid: loss=1.6275 loc_loss=1.2120 time_loss=4.1554 loc_acc=0.5044 time_acc=0.0581
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 3 of 30
+ batch=0050 loss=1.7148
+ batch=0100 loss=1.7250
+ batch=0150 loss=1.5452
+ batch=0200 loss=1.5555
+ batch=0250 loss=1.5431
+Train: loss=1.6238 loc_loss=1.2116 time_loss=4.1220 loc_acc=0.5120 time_acc=0.0584
+Valid: loss=1.5122 loc_loss=1.1143 time_loss=3.9794 loc_acc=0.5431 time_acc=0.0723
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 4 of 30
+ batch=0050 loss=1.4938
+ batch=0100 loss=1.5161
+ batch=0150 loss=1.7048
+ batch=0200 loss=1.5724
+ batch=0250 loss=1.6503
+Train: loss=1.5364 loc_loss=1.1369 time_loss=3.9949 loc_acc=0.5342 time_acc=0.0680
+Valid: loss=1.4119 loc_loss=1.0226 time_loss=3.8921 loc_acc=0.5704 time_acc=0.0809
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 5 of 30
+ batch=0050 loss=1.4324
+ batch=0100 loss=1.2703
+ batch=0150 loss=1.5415
+ batch=0200 loss=1.5195
+ batch=0250 loss=1.4304
+Train: loss=1.4667 loc_loss=1.0744 time_loss=3.9230 loc_acc=0.5581 time_acc=0.0727
+Valid: loss=1.3322 loc_loss=0.9496 time_loss=3.8262 loc_acc=0.6103 time_acc=0.0886
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 6 of 30
+ batch=0050 loss=1.3682
+ batch=0100 loss=1.3253
+ batch=0150 loss=1.5545
+ batch=0200 loss=1.2990
+ batch=0250 loss=1.2809
+Train: loss=1.3942 loc_loss=1.0071 time_loss=3.8710 loc_acc=0.5871 time_acc=0.0772
+Valid: loss=1.2740 loc_loss=0.8954 time_loss=3.7860 loc_acc=0.6164 time_acc=0.0901
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 7 of 30
+ batch=0050 loss=1.3984
+ batch=0100 loss=1.4179
+ batch=0150 loss=1.4176
+ batch=0200 loss=1.3126
+ batch=0250 loss=1.3086
+Train: loss=1.3189 loc_loss=0.9370 time_loss=3.8187 loc_acc=0.6142 time_acc=0.0823
+Valid: loss=1.1929 loc_loss=0.8202 time_loss=3.7268 loc_acc=0.6731 time_acc=0.0942
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 8 of 30
+ batch=0050 loss=1.1256
+ batch=0100 loss=1.3609
+ batch=0150 loss=1.2822
+ batch=0200 loss=1.2372
+ batch=0250 loss=1.2758
+Train: loss=1.2683 loc_loss=0.8914 time_loss=3.7690 loc_acc=0.6339 time_acc=0.0879
+Valid: loss=1.1536 loc_loss=0.7880 time_loss=3.6565 loc_acc=0.6757 time_acc=0.1020
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 9 of 30
+ batch=0050 loss=1.2597
+ batch=0100 loss=1.0707
+ batch=0150 loss=1.1583
+ batch=0200 loss=1.1128
+ batch=0250 loss=1.2633
+Train: loss=1.2192 loc_loss=0.8489 time_loss=3.7025 loc_acc=0.6495 time_acc=0.0904
+Valid: loss=1.1132 loc_loss=0.7550 time_loss=3.5815 loc_acc=0.6925 time_acc=0.1062
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 10 of 30
+ batch=0050 loss=1.1764
+ batch=0100 loss=1.2947
+ batch=0150 loss=1.1629
+ batch=0200 loss=1.0817
+ batch=0250 loss=1.1798
+Train: loss=1.1637 loc_loss=0.8028 time_loss=3.6091 loc_acc=0.6767 time_acc=0.0954
+Valid: loss=1.0396 loc_loss=0.6922 time_loss=3.4741 loc_acc=0.7200 time_acc=0.1057
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 11 of 30
+ batch=0050 loss=1.2180
+ batch=0100 loss=1.1219
+ batch=0150 loss=1.2189
+ batch=0200 loss=1.0043
+ batch=0250 loss=1.1172
+Train: loss=1.1268 loc_loss=0.7738 time_loss=3.5306 loc_acc=0.6862 time_acc=0.0989
+Valid: loss=0.9814 loc_loss=0.6444 time_loss=3.3699 loc_acc=0.7483 time_acc=0.1197
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 12 of 30
+ batch=0050 loss=1.0792
+ batch=0100 loss=1.1265
+ batch=0150 loss=1.0906
+ batch=0200 loss=1.1559
+ batch=0250 loss=1.0044
+Train: loss=1.0761 loc_loss=0.7313 time_loss=3.4479 loc_acc=0.7036 time_acc=0.1056
+Valid: loss=0.9805 loc_loss=0.6494 time_loss=3.3111 loc_acc=0.7410 time_acc=0.1208
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 13 of 30
+ batch=0050 loss=1.0116
+ batch=0100 loss=0.9743
+ batch=0150 loss=0.9408
+ batch=0200 loss=1.0758
+ batch=0250 loss=1.1442
+Train: loss=1.0536 loc_loss=0.7172 time_loss=3.3642 loc_acc=0.7119 time_acc=0.1113
+Valid: loss=0.9309 loc_loss=0.6075 time_loss=3.2340 loc_acc=0.7665 time_acc=0.1262
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 14 of 30
+ batch=0050 loss=0.9854
+ batch=0100 loss=1.0511
+ batch=0150 loss=1.0685
+ batch=0200 loss=0.9912
+ batch=0250 loss=0.9955
+Train: loss=1.0212 loc_loss=0.6913 time_loss=3.2992 loc_acc=0.7262 time_acc=0.1157
+Valid: loss=0.8950 loc_loss=0.5757 time_loss=3.1923 loc_acc=0.7774 time_acc=0.1237
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 15 of 30
+ batch=0050 loss=1.2019
+ batch=0100 loss=0.9490
+ batch=0150 loss=1.1671
+ batch=0200 loss=0.9845
+ batch=0250 loss=1.0369
+Train: loss=1.0039 loc_loss=0.6809 time_loss=3.2292 loc_acc=0.7321 time_acc=0.1210
+Valid: loss=0.8638 loc_loss=0.5545 time_loss=3.0932 loc_acc=0.7830 time_acc=0.1363
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 16 of 30
+ batch=0050 loss=1.0315
+ batch=0100 loss=1.0285
+ batch=0150 loss=1.0417
+ batch=0200 loss=0.8556
+ batch=0250 loss=1.0627
+Train: loss=0.9631 loc_loss=0.6463 time_loss=3.1671 loc_acc=0.7470 time_acc=0.1258
+Valid: loss=0.8395 loc_loss=0.5346 time_loss=3.0484 loc_acc=0.7951 time_acc=0.1351
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 17 of 30
+ batch=0050 loss=0.9454
+ batch=0100 loss=0.9687
+ batch=0150 loss=1.0843
+ batch=0200 loss=0.9825
+ batch=0250 loss=1.0529
+Train: loss=0.9479 loc_loss=0.6363 time_loss=3.1153 loc_acc=0.7514 time_acc=0.1274
+Valid: loss=0.8131 loc_loss=0.5149 time_loss=2.9811 loc_acc=0.8029 time_acc=0.1461
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 18 of 30
+ batch=0050 loss=0.8841
+ batch=0100 loss=0.8976
+ batch=0150 loss=0.8133
+ batch=0200 loss=0.9477
+ batch=0250 loss=0.8771
+Train: loss=0.9224 loc_loss=0.6159 time_loss=3.0651 loc_acc=0.7616 time_acc=0.1292
+Valid: loss=0.8275 loc_loss=0.5342 time_loss=2.9330 loc_acc=0.7931 time_acc=0.1423
+Epoch 19 of 30
+ batch=0050 loss=0.9194
+ batch=0100 loss=0.9637
+ batch=0150 loss=1.0044
+ batch=0200 loss=0.7672
+ batch=0250 loss=0.8014
+Train: loss=0.8972 loc_loss=0.5960 time_loss=3.0118 loc_acc=0.7691 time_acc=0.1351
+Valid: loss=0.7772 loc_loss=0.4865 time_loss=2.9074 loc_acc=0.8169 time_acc=0.1512
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 20 of 30
+ batch=0050 loss=0.9227
+ batch=0100 loss=0.8450
+ batch=0150 loss=0.8959
+ batch=0200 loss=0.8089
+ batch=0250 loss=0.8205
+Train: loss=0.8799 loc_loss=0.5823 time_loss=2.9753 loc_acc=0.7742 time_acc=0.1392
+Valid: loss=0.7624 loc_loss=0.4770 time_loss=2.8540 loc_acc=0.8129 time_acc=0.1510
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 21 of 30
+ batch=0050 loss=0.7942
+ batch=0100 loss=0.8383
+ batch=0150 loss=0.8374
+ batch=0200 loss=0.8919
+ batch=0250 loss=0.9978
+Train: loss=0.8667 loc_loss=0.5730 time_loss=2.9377 loc_acc=0.7782 time_acc=0.1437
+Valid: loss=0.7452 loc_loss=0.4634 time_loss=2.8182 loc_acc=0.8299 time_acc=0.1561
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 22 of 30
+ batch=0050 loss=0.8911
+ batch=0100 loss=0.9123
+ batch=0150 loss=0.7633
+ batch=0200 loss=0.7940
+ batch=0250 loss=0.8635
+Train: loss=0.8473 loc_loss=0.5574 time_loss=2.8996 loc_acc=0.7887 time_acc=0.1468
+Valid: loss=0.7276 loc_loss=0.4490 time_loss=2.7865 loc_acc=0.8281 time_acc=0.1570
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 23 of 30
+ batch=0050 loss=0.9126
+ batch=0100 loss=0.8093
+ batch=0150 loss=0.7566
+ batch=0200 loss=0.8722
+ batch=0250 loss=0.7860
+Train: loss=0.8272 loc_loss=0.5405 time_loss=2.8677 loc_acc=0.7947 time_acc=0.1502
+Valid: loss=0.6846 loc_loss=0.4125 time_loss=2.7207 loc_acc=0.8444 time_acc=0.1722
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 24 of 30
+ batch=0050 loss=0.8038
+ batch=0100 loss=0.7671
+ batch=0150 loss=0.8067
+ batch=0200 loss=0.8905
+ batch=0250 loss=0.7059
+Train: loss=0.8116 loc_loss=0.5295 time_loss=2.8217 loc_acc=0.7971 time_acc=0.1539
+Valid: loss=0.6829 loc_loss=0.4132 time_loss=2.6970 loc_acc=0.8463 time_acc=0.1726
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 25 of 30
+ batch=0050 loss=0.7580
+ batch=0100 loss=0.7839
+ batch=0150 loss=0.7385
+ batch=0200 loss=0.8817
+ batch=0250 loss=0.8022
+Train: loss=0.7968 loc_loss=0.5180 time_loss=2.7874 loc_acc=0.8043 time_acc=0.1563
+Valid: loss=0.6663 loc_loss=0.4002 time_loss=2.6610 loc_acc=0.8497 time_acc=0.1755
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 26 of 30
+ batch=0050 loss=0.8270
+ batch=0100 loss=0.7599
+ batch=0150 loss=0.7213
+ batch=0200 loss=0.8445
+ batch=0250 loss=0.7964
+Train: loss=0.7798 loc_loss=0.5042 time_loss=2.7560 loc_acc=0.8103 time_acc=0.1578
+Valid: loss=0.6876 loc_loss=0.4217 time_loss=2.6591 loc_acc=0.8404 time_acc=0.1740
+Epoch 27 of 30
+ batch=0050 loss=0.7939
+ batch=0100 loss=0.6847
+ batch=0150 loss=0.7905
+ batch=0200 loss=0.8081
+ batch=0250 loss=0.7516
+Train: loss=0.7815 loc_loss=0.5090 time_loss=2.7257 loc_acc=0.8087 time_acc=0.1617
+Valid: loss=0.6441 loc_loss=0.3835 time_loss=2.6063 loc_acc=0.8540 time_acc=0.1797
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 28 of 30
+ batch=0050 loss=0.7859
+ batch=0100 loss=0.7785
+ batch=0150 loss=0.6539
+ batch=0200 loss=0.7574
+ batch=0250 loss=0.9019
+Train: loss=0.7537 loc_loss=0.4844 time_loss=2.6936 loc_acc=0.8173 time_acc=0.1665
+Valid: loss=0.6179 loc_loss=0.3611 time_loss=2.5680 loc_acc=0.8582 time_acc=0.1806
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Epoch 29 of 30
+ batch=0050 loss=0.8171
+ batch=0100 loss=0.7737
+ batch=0150 loss=0.7328
+ batch=0200 loss=0.7207
+ batch=0250 loss=0.7605
+Train: loss=0.7402 loc_loss=0.4735 time_loss=2.6676 loc_acc=0.8229 time_acc=0.1701
+Valid: loss=0.6259 loc_loss=0.3712 time_loss=2.5465 loc_acc=0.8614 time_acc=0.1813
+Epoch 30 of 30
+ batch=0050 loss=0.7123
+ batch=0100 loss=0.7215
+ batch=0150 loss=0.7465
+ batch=0200 loss=0.6327
+ batch=0250 loss=0.7898
+Train: loss=0.7317 loc_loss=0.4669 time_loss=2.6473 loc_acc=0.8260 time_acc=0.1689
+Valid: loss=0.6064 loc_loss=0.3539 time_loss=2.5260 loc_acc=0.8682 time_acc=0.1908
+saved best checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_best.pt
+Best valid loss: 0.6064491565009702
+PRETRAIN_DONE
