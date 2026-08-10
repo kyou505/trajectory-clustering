@@ -1,4 +1,6 @@
 import argparse
+import json
+import sys
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
@@ -7,7 +9,23 @@ import yaml
 from src.experiment.experiment_config import (
     load_experiment_config,
 )
+from src.evaluate_condtc import evaluate_checkpoint
 from src.training.train_condtc import train_condtc
+
+
+class TeeStream:
+    """把写入同时转发到多个流（终端 + 日志文件）。"""
+
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, data):
+        for stream in self.streams:
+            stream.write(data)
+
+    def flush(self):
+        for stream in self.streams:
+            stream.flush()
 
 
 def parse_cli_args():
@@ -81,29 +99,50 @@ def main():
         run_dir=run_dir,
     )
 
-    print("experiment initialized")
-    print("run directory:", run_dir)
-    print("config snapshot:", config_snapshot)
-    train_condtc(
-        num_epochs=config.training.num_epochs,
-        batch_size=config.data.batch_size,
-        initialization_batch_size=config.data.initialization_batch_size,
-        num_clusters=config.model.num_clusters,
-        time_loss_weight=config.loss.time_loss_weight,
-        clustering_loss_weight=config.loss.clustering_loss_weight,
-        instance_temperature=config.loss.instance_temperature,
-        cluster_temperature=config.loss.cluster_temperature,
-        instance_loss_weight=config.loss.instance_loss_weight,
-        cluster_contrastive_loss_weight=config.loss.cluster_contrastive_loss_weight,
-        representation_learning_rate=config.optimizer.representation_learning_rate,
-        clustering_learning_rate=config.optimizer.clustering_learning_rate,
-        weight_decay=config.optimizer.weight_decay,
-        seed=config.training.seed,
-        max_initialization_batches=config.training.max_initialization_batches,
-        max_train_batches=config.training.max_train_batches,
-        log_interval=config.training.log_interval,
-        checkpoint_name=config.checkpoint.filename,
-    )
+    log_path = run_dir / "train.log"
+    original_stdout = sys.stdout
+    original_stderr = sys.stderr
+    with log_path.open("w", encoding="utf-8") as log_file:
+        sys.stdout = TeeStream(original_stdout, log_file)
+        sys.stderr = TeeStream(original_stderr, log_file)
+        try:
+            print("experiment initialized")
+            print("run directory:", run_dir)
+            print("config snapshot:", config_snapshot)
+            model, history, checkpoint_path = train_condtc(
+                num_epochs=config.training.num_epochs,
+                batch_size=config.data.batch_size,
+                initialization_batch_size=config.data.initialization_batch_size,
+                num_clusters=config.model.num_clusters,
+                time_loss_weight=config.loss.time_loss_weight,
+                clustering_loss_weight=config.loss.clustering_loss_weight,
+                instance_temperature=config.loss.instance_temperature,
+                cluster_temperature=config.loss.cluster_temperature,
+                instance_loss_weight=config.loss.instance_loss_weight,
+                cluster_contrastive_loss_weight=config.loss.cluster_contrastive_loss_weight,
+                representation_learning_rate=config.optimizer.representation_learning_rate,
+                clustering_learning_rate=config.optimizer.clustering_learning_rate,
+                weight_decay=config.optimizer.weight_decay,
+                seed=config.training.seed,
+                max_initialization_batches=config.training.max_initialization_batches,
+                max_train_batches=config.training.max_train_batches,
+                log_interval=config.training.log_interval,
+                output_dir=run_dir,
+                pretrain_checkpoint_path=config.checkpoint.pretrain_path,
+            )
+
+            print("evaluating:", checkpoint_path)
+            metrics = evaluate_checkpoint(
+                checkpoint_path=checkpoint_path,
+                batch_size=256,
+            )
+            metrics_path = run_dir / "metrics.json"
+            with metrics_path.open("w", encoding="utf-8") as file:
+                json.dump(metrics, file, indent=2, ensure_ascii=False)
+            print("metrics saved:", metrics_path)
+        finally:
+            sys.stdout = original_stdout
+            sys.stderr = original_stderr
 
 
 if __name__ == "__main__":

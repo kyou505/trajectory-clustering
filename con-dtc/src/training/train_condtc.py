@@ -192,21 +192,33 @@ def train_condtc(
         max_initialization_batches=None,
         max_train_batches=None,
         log_interval=50,
-        checkpoint_name="condtc_best.pt",
+        output_dir=None,
+        pretrain_checkpoint_path=None,
 ):
+    if output_dir is None:
+        raise ValueError("output_dir is required")
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
     device = get_device()
     print("device:", device)
     project_dir = Path(__file__).resolve().parents[2]
-    pretrain_checkpoint_path = project_dir / "checkpoints" / "sttraj2vec_pretrain_best.pt"
-    checkpoint_dir = project_dir / "checkpoints"
+    if pretrain_checkpoint_path is None:
+        pretrain_checkpoint_path = project_dir / "checkpoints" / "sttraj2vec_pretrain_best.pt"
+    else:
+        pretrain_checkpoint_path = Path(pretrain_checkpoint_path)
+        if not pretrain_checkpoint_path.is_absolute():
+            pretrain_checkpoint_path = project_dir / pretrain_checkpoint_path
+    print("pretrain checkpoint:", pretrain_checkpoint_path)
+    output_dir = Path(output_dir)
+    if not output_dir.is_absolute():
+        output_dir = project_dir / output_dir
+    checkpoint_dir = output_dir / "checkpoints"
     checkpoint_dir.mkdir(
         parents=True,
         exist_ok=True,
     )
-    output_checkpoint_path = checkpoint_dir / checkpoint_name
+    output_checkpoint_path = checkpoint_dir / "condtc_best.pt"
     dataset = QDTrajectoryDataset()
     model = ContrastiveTrajectoryModel(num_clusters=num_clusters).to(device)
     pretrain_metadata = model.load_pretrained_components(
@@ -305,7 +317,7 @@ def train_condtc(
             }, output_checkpoint_path)
             print("save checkpoint: ", output_checkpoint_path)
     print("best train_loss: ", best_train_loss)
-    return model, history
+    return model, history, output_checkpoint_path
 
 
 
@@ -318,5 +330,5 @@ if __name__ == "__main__":
         max_initialization_batches=2,
         max_train_batches=3,
         log_interval=1,
-        checkpoint_name="condtc_smoke.pt",
+        output_dir="runs/smoke",
     )
