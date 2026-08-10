@@ -4,11 +4,11 @@ import torch
 from scipy.optimize import linear_sum_assignment
 from sklearn.metrics import (normalized_mutual_info_score, rand_score)
 from torch.utils.data import DataLoader
-from src.data_process import QDTrajectoryDataset
+from src.data.data_process import QDTrajectoryDataset
 from src.models.contrastive_model import (
     ContrastiveTrajectoryModel,
 )
-from src.train_condtc import get_device
+from src.training.train_condtc import get_device
 
 @torch.no_grad()
 def predict_clusters(
@@ -101,7 +101,7 @@ def evaluate_checkpoint(
         map_location=device,
         weights_only=True,
     )
-    config = checkpoint["config"]
+    config = checkpoint["configs"]
     model = ContrastiveTrajectoryModel(
         num_clusters=config["num_clusters"],
     ).to(device)

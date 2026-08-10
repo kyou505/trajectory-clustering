@@ -1,9 +1,9 @@
 import torch
 from torch.utils.data import random_split, DataLoader
 
-from src.augmentation import ContrastiveTrajectoryDataset
-from src.data_process import QDTrajectoryDataset
-from src.mstm import MSTMDataset
+from src.data.augmentation import ContrastiveTrajectoryDataset
+from src.data.data_process import QDTrajectoryDataset
+from src.data.mstm import MSTMDataset
 
 def create_data_loaders(
     batch_size=32,

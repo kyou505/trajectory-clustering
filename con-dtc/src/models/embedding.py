@@ -77,7 +77,7 @@ class SpatialTemporalEmbedding(nn.Module):
         return embedding
 
 def test():
-    from src.data_loader import create_data_loaders
+    from data.data_loader import create_data_loaders
     train_loader, _, _ = create_data_loaders(
         batch_size=32
     )

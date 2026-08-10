@@ -2,18 +2,18 @@ from pathlib import Path
 
 import torch
 
-from src.cluster_init import compute_global_target_distribution
+from src.training.cluster_init import compute_global_target_distribution
 from torch.utils.data import DataLoader
 
-from src.cluster_init import (
+from src.training.cluster_init import (
     extract_trajectory_embeddings,
     initialize_cluster_centers,
 )
-from src.condtc_loss import ConDTCTotalLoss
-from src.data_loader import (
+from src.models.condtc_loss import ConDTCTotalLoss
+from src.data.data_loader import (
     create_contrastive_data_loader,
 )
-from src.data_process import QDTrajectoryDataset
+from src.data.data_process import QDTrajectoryDataset
 from src.models.contrastive_model import (
     ContrastiveTrajectoryModel,
 )
@@ -288,7 +288,7 @@ def train_condtc(
                 "optimizer_state_dict": optimizer.state_dict(),
                 "train_metrics": train_metrics,
                 "kmeans_inertia": float(kmeans.inertia_),
-                "config": {
+                "configs": {
                     "batch_size": batch_size,
                     "num_clusters": num_clusters,
                     "time_loss_weight": time_loss_weight,

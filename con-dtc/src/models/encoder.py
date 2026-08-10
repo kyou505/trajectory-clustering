@@ -1,4 +1,3 @@
-import torch
 from torch import nn
 from .embedding import SpatialTemporalEmbedding
 
@@ -65,7 +64,7 @@ def mask_mean_pooling(
     return trajectory_vector
 
 def test():
-    from ..data_loader import create_data_loaders
+    from data.data_loader import create_data_loaders
     train_loader, _, _ = create_data_loaders(batch_size=32)
     batch = next(iter(train_loader))
     model = TrajectoryEncoder(

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import torch
 
-from src.data_loader import create_data_loaders
+from src.data.data_loader import create_data_loaders
 from src.models.pretrain_model import (
     MSTMLoss,
     STTraj2VecPretrainModel
@@ -367,7 +367,7 @@ def pretrain(
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
                     "valid_metrics": valid_metrics,
-                    "config": {
+                    "configs": {
                         "batch_size": batch_size,
                         "learning_rate": learning_rate,
                         "time_loss_weight": time_loss_weight,
