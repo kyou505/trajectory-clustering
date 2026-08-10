@@ -2,13 +2,7 @@ from pathlib import Path
 
 import torch
 
-from src.training.cluster_init import compute_global_target_distribution
 from torch.utils.data import DataLoader
-
-from src.training.cluster_init import (
-    extract_trajectory_embeddings,
-    initialize_cluster_centers,
-)
 from src.models.condtc_loss import ConDTCTotalLoss
 from src.data.data_loader import (
     create_contrastive_data_loader,
@@ -16,6 +10,11 @@ from src.data.data_loader import (
 from src.data.data_process import QDTrajectoryDataset
 from src.models.contrastive_model import (
     ContrastiveTrajectoryModel,
+)
+from src.training.cluster_init import (
+    compute_global_cross_view_targets,
+    extract_trajectory_embeddings,
+    initialize_cluster_centers,
 )
 
 def get_device():
@@ -82,11 +81,13 @@ def train_one_step(
         criterion,
         optimizer,
         device,
-        global_p
+        global_p1,
+        global_p2,
 ):
     model.train()
     indices = batch["index"].long()
-    p_batch = global_p[indices].to(device)
+    p1_batch = global_p1[indices].to(device)
+    p2_batch = global_p2[indices].to(device)
     batch = move_to_device(batch, device)
     optimizer.zero_grad(set_to_none=True)
     mstm_output = model.forward_mstm(
@@ -105,7 +106,8 @@ def train_one_step(
         time_targets=batch["time_targets"],
         q1=cluster_output["q1"],
         q2=cluster_output["q2"],
-        p=p_batch,
+        p1=p1_batch,
+        p2=p2_batch,
         head_in1=cluster_output["head_in1"],
         head_in2=cluster_output["head_in2"],
         head_cl1=cluster_output["head_cl1"],
@@ -130,7 +132,8 @@ def train_one_epoch(
         criterion,
         optimizer,
         device,
-        global_p,
+        global_p1,
+        global_p2,
         max_batches=None,
         log_interval=50,
 ):
@@ -149,7 +152,8 @@ def train_one_epoch(
             criterion=criterion,
             optimizer=optimizer,
             device=device,
-            global_p=global_p,
+            global_p1=global_p1,
+            global_p2=global_p2,
         )
         for name, value in metrics.items():
             metrics_sums[name] = metrics_sums.get(name, 0.0) + value * batch_size
@@ -263,13 +267,21 @@ def train_condtc(
         seed=seed,
         shuffle=True
     )
+    target_loader = DataLoader(
+        train_loader.dataset,
+        batch_size=initialization_batch_size,
+        shuffle=False,
+        num_workers=0,
+    )
     best_train_loss = float("inf")
     history = []
     for epoch in range(1, num_epochs + 1):
         print(f"epoch={epoch} / num_epochs={num_epochs}")
-        global_q, global_p = compute_global_target_distribution(
+        # 固定本 epoch 的两个增强视图
+        train_loader.dataset.set_epoch(epoch)
+        global_targets = compute_global_cross_view_targets(
             model=model,
-            loader=initialization_loader,
+            loader=target_loader,
             device=device,
             num_samples=len(dataset),
         )
@@ -279,7 +291,8 @@ def train_condtc(
             criterion=criterion,
             optimizer=optimizer,
             device=device,
-            global_p=global_p,
+            global_p1=global_targets["p1"],
+            global_p2=global_targets["p2"],
             max_batches=max_train_batches,
             log_interval=log_interval,
         )

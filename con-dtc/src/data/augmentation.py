@@ -7,7 +7,7 @@ SEP_ID = 2
 NUM_TIME_SLOTS = 1440
 
 # 随机删除轨迹点
-def point_dropout(sample, dropout_rate=0.1):
+def point_dropout(sample, dropout_rate=0.1, generator=None):
     location_ids = sample["location_ids"]
     time_ids = sample["time_ids"]
     length = int(sample["length"].item())
@@ -15,7 +15,7 @@ def point_dropout(sample, dropout_rate=0.1):
     drop_count = max(1, int(length * dropout_rate))
     keep_count = length - drop_count
 
-    permutation = torch.randperm(length)
+    permutation = torch.randperm(length, generator=generator)
     keep_positions = permutation[:keep_count].sort().values + 1
     kept_locations = location_ids[keep_positions]
     kept_times = time_ids[keep_positions]
@@ -47,14 +47,15 @@ def point_dropout(sample, dropout_rate=0.1):
     }
 
 # 时间偏移
-def time_offset(sample, max_offset_minutes=2):
+def time_offset(sample, max_offset_minutes=2, generator=None):
     new_times = sample["time_ids"].clone()
     valid_postions = sample["pooling_mask"]
 
     offset = torch.randint(
         low=1,
         high=max_offset_minutes + 1,
-        size=()
+        size=(),
+        generator=generator,
     ).item()
 
     time_slots = new_times[valid_postions] - 4
@@ -76,18 +77,27 @@ class ContrastiveTrajectoryDataset(Dataset):
             base_dataset,
             dropout_rate=0.1,
             max_offset_minutes=2,
+            seed=0,
     ):
         self.base_dataset = base_dataset
         self.dropout_rate = dropout_rate
         self.max_offset_minutes = max_offset_minutes
+        self.seed = seed
+        self.epoch = 0
+
+    def set_epoch(self, epoch):
+        self.epoch = int(epoch)
 
     def __len__(self):
         return len(self.base_dataset)
 
     def __getitem__(self, idx):
         sample = self.base_dataset[idx]
-        view1 = point_dropout(sample, dropout_rate=self.dropout_rate)
-        view2 = time_offset(sample, max_offset_minutes=self.max_offset_minutes)
+        sample_index = int(sample["index"].item())
+        generator = torch.Generator()
+        generator.manual_seed(self.seed + self.epoch * 1_000_003 + sample_index)
+        view1 = point_dropout(sample, dropout_rate=self.dropout_rate, generator=generator)
+        view2 = time_offset(sample, max_offset_minutes=self.max_offset_minutes, generator=generator)
         result = dict(sample)
         result["view1"] = view1
         result["view2"] = view2

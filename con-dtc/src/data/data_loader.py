@@ -70,6 +70,7 @@ def create_contrastive_data_loader(
         base_dataset=mstm_dataset,
         dropout_rate=dropout_rate,
         max_offset_minutes=max_offset_minutes,
+        seed=seed,
     )
     generator = torch.Generator().manual_seed(seed)
     return DataLoader(

@@ -63,6 +63,72 @@ def initialize_cluster_centers(
     return kmeans
 
 @torch.no_grad()
+def compute_global_cross_view_targets(
+        model,
+        loader,
+        device,
+        num_samples,
+):
+    model.eval()
+    global_q1 = None
+    global_q2 = None
+    seen = torch.zeros(num_samples, dtype=torch.bool)
+    for batch in loader:
+        indices = batch["index"].long()
+        view1 = {
+            key: value.to(device)
+            for key, value in batch["view1"].items()
+            if key in {
+                "location_ids",
+                "time_ids",
+                "attention_mask",
+                "pooling_mask",
+            }
+        }
+        view2 = {
+            key: value.to(device)
+            for key, value in batch["view2"].items()
+            if key in {
+                "location_ids",
+                "time_ids",
+                "attention_mask",
+                "pooling_mask",
+            }
+        }
+        z1 = model.encode(view1)
+        z2 = model.encode(view2)
+        q1 = model.clustering_layer(z1).cpu()
+        q2 = model.clustering_layer(z2).cpu()
+        if global_q1 is None:
+            num_clusters = q1.size(1)
+            global_q1 = torch.empty(num_samples, num_clusters, dtype=q1.dtype)
+            global_q2 = torch.empty(num_samples, num_clusters, dtype=q2.dtype)
+        if indices.min().item() < 0:
+            raise ValueError("indices should be >= 0")
+        if indices.max().item() >= num_samples:
+            raise ValueError("indices should be < num_samples")
+        if seen[indices].any():
+            raise RuntimeError("indices should be unique")
+        global_q1[indices] = q1
+        global_q2[indices] = q2
+        seen[indices] = True
+
+    if global_q1 is None:
+        raise RuntimeError("no batches were processed")
+    if not seen.all():
+        missing_count = (~seen).sum().item()
+        raise RuntimeError(f"Missing {missing_count} samples")
+
+    global_p1 = target_distribution(global_q1)
+    global_p2 = target_distribution(global_q2)
+    return {
+        "q1": global_q1,
+        "q2": global_q2,
+        "p1": global_p1,
+        "p2": global_p2,
+    }
+
+@torch.no_grad()
 def compute_global_target_distribution(
         model,
         loader,
