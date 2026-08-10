@@ -4,7 +4,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 
-PROJECT_DIR = Path(__file__).resolve().parent.parent
+PROJECT_DIR = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_DIR / "data" / "qdTimeNoise0424"
 VOCAB_PATH = DATA_DIR / "location_vocab.json"
 LENGTH_PATH = DATA_DIR / "trj_length.csv"

@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import pandas as pd
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data" / "qdTimeNoise0424"
+DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "qdTimeNoise0424"
 DATA_PATH = DATA_DIR / "data_k3.h5"
 VOCAB_PATH = DATA_DIR / "location_vocab.json"
 
