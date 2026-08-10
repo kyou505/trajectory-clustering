@@ -2,7 +2,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from scipy.optimize import linear_sum_assignment
-from sklearn.metrics import (normalized_mutual_info_score, rand_score)
+from sklearn.metrics import (normalized_mutual_info_score, rand_score, adjusted_rand_score)
 from torch.utils.data import DataLoader
 from src.data.data_process import QDTrajectoryDataset
 from src.models.contrastive_model import (
@@ -83,10 +83,12 @@ def clustering_metrics(
     uacc = clustering_accuracy(labels, predictions)
     nmi = normalized_mutual_info_score(labels, predictions, average_method="geometric")
     ri = rand_score(labels, predictions)
+    ari = adjusted_rand_score(labels, predictions)
     return {
         "uacc": float(uacc),
         "nmi": float(nmi),
         "ri": float(ri),
+        "ari": float(ari),
     }
 
 def evaluate_checkpoint(
