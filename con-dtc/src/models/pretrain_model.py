@@ -114,7 +114,7 @@ class MSTMLoss(nn.Module):
 
 
 def test():
-    from ..data_loader import create_data_loaders
+    from data.data_loader import create_data_loaders
     train_loader, val_loader, test_loader = create_data_loaders(
         batch_size=32
     )

@@ -4,8 +4,7 @@ import torch
 from torch import nn
 
 from src.models.dec import (
-    DECClusteringLayer,
-    ConDTCClusteringLoss
+    DECClusteringLayer
 )
 from src.models.encoder import (
     TrajectoryEncoder,
@@ -146,11 +145,11 @@ class ContrastiveTrajectoryModel(nn.Module):
         return {
             "epoch": checkpoint.get("epoch"),
             "valid_metrics": checkpoint.get("valid_metrics"),
-            "config": checkpoint.get("config"),
+            "configs": checkpoint.get("configs"),
         }
 
 def test():
-    from src.data_loader import (
+    from data.data_loader import (
         create_contrastive_data_loader,
     )
 

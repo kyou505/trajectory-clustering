@@ -94,7 +94,7 @@ class ContrastiveTrajectoryDataset(Dataset):
         return result
 
 def test():
-    from src.data_process import (QDTrajectoryDataset)
+    from data.data_process import (QDTrajectoryDataset)
     torch.manual_seed(42)
     base_dataset = QDTrajectoryDataset()
     dataset = ContrastiveTrajectoryDataset(base_dataset, dropout_rate=0.1, max_offset_minutes=2)

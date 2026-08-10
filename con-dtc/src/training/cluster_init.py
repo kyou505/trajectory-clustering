@@ -110,11 +110,11 @@ def test():
     from pathlib import Path
     from torch.utils.data import DataLoader, Subset
 
-    from src.data_process import QDTrajectoryDataset
+    from data.data_process import QDTrajectoryDataset
     from src.models.contrastive_model import (
         ContrastiveTrajectoryModel,
     )
-    from src.data_loader import (
+    from data.data_loader import (
         create_contrastive_data_loader,
     )
 

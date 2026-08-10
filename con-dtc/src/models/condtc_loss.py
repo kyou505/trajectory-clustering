@@ -126,7 +126,7 @@ class InfoNCELoss(nn.Module):
 
 def test():
     from pathlib import Path
-    from src.data_loader import (
+    from data.data_loader import (
         create_contrastive_data_loader,
     )
     from src.models.contrastive_model import (
