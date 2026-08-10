@@ -106,6 +106,10 @@ def train_one_step(
         q1=cluster_output["q1"],
         q2=cluster_output["q2"],
         p=p_batch,
+        head_in1=cluster_output["head_in1"],
+        head_in2=cluster_output["head_in2"],
+        head_cl1=cluster_output["head_cl1"],
+        head_cl2=cluster_output["head_cl2"],
     )
     if not torch.isfinite(losses["loss"]):
         raise RuntimeError("Loss is not finite")
@@ -157,6 +161,8 @@ def train_one_epoch(
                 f"loss={metrics['loss']:.4f} "
                 f"representation_loss={metrics['representation_loss']:.4f} "
                 f"clustering_loss={metrics['clustering_loss']:.4f} "
+                f"instance_nce={metrics['instance_contrastive_loss']:.4f} "
+                f"cluster_nce={metrics['cluster_contrastive_loss']:.4f} "
             )
     if process_batches == 0:
         raise RuntimeError("No batches were processed")
@@ -174,7 +180,11 @@ def train_condtc(
         initialization_batch_size=256,
         num_clusters=12,
         time_loss_weight=0.1,
-        clustering_loss_weight=0.5,
+        clustering_loss_weight=2,
+        instance_temperature=0.5,
+        cluster_temperature=1.0,
+        instance_loss_weight=1.0,
+        cluster_contrastive_loss_weight=1.0,
         representation_learning_rate=5e-5,
         clustering_learning_rate=1.5e-4,
         weight_decay=0.01,
@@ -231,6 +241,10 @@ def train_condtc(
     criterion = ConDTCTotalLoss(
         time_loss_weight=time_loss_weight,
         clustering_loss_weight=clustering_loss_weight,
+        instance_temperature=instance_temperature,
+        cluster_temperature=cluster_temperature,
+        instance_loss_weight=instance_loss_weight,
+        cluster_contrastive_loss_weight=cluster_contrastive_loss_weight,
     )
     train_loader = create_contrastive_data_loader(
         batch_size=batch_size,
@@ -260,10 +274,10 @@ def train_condtc(
         print(
             "Train: "
             f"loss={train_metrics['loss']:.4f} "
-            f"representation="
-            f"{train_metrics['representation_loss']:.4f} "
-            f"clustering="
-            f"{train_metrics['clustering_loss']:.4f}"
+            f"mstm={train_metrics['representation_loss']:.4f} "
+            f"instance_nce={train_metrics['instance_contrastive_loss']:.4f} "
+            f"cluster_nce={train_metrics['cluster_contrastive_loss']:.4f} "
+            f"dec={train_metrics['clustering_loss']:.4f}"
         )
         history.append({"epoch": epoch, "train": train_metrics})
         if train_metrics["loss"] < best_train_loss:
@@ -279,6 +293,10 @@ def train_condtc(
                     "num_clusters": num_clusters,
                     "time_loss_weight": time_loss_weight,
                     "clustering_loss_weight": clustering_loss_weight,
+                    "instance_temperature": instance_temperature,
+                    "cluster_temperature": cluster_temperature,
+                    "instance_loss_weight": instance_loss_weight,
+                    "cluster_contrastive_loss_weight": cluster_contrastive_loss_weight,
                     "representation_learning_rate": representation_learning_rate,
                     "clustering_learning_rate": clustering_learning_rate,
                     "weight_decay": weight_decay,

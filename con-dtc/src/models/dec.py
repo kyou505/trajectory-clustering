@@ -71,7 +71,7 @@ class ConDTCClusteringLoss(nn.Module):
         loss_view1 = self.dec_loss(q1, p)
         loss_view2 = self.dec_loss(q2, p)
 
-        loss = 0.5 * (loss_view1 + loss_view2)
+        loss = (loss_view1 + loss_view2)
         return {
             "loss": loss,
             "loss_view1": loss_view1,

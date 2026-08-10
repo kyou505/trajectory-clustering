@@ -49,6 +49,18 @@ class ContrastiveTrajectoryModel(nn.Module):
         self.time_head = nn.Linear(d_model, time_vocab_size, bias=False)
         self.location_head.weight = self.encoder.embedding.location_embedding.weight
         self.time_head.weight = self.encoder.embedding.time_embedding.weight
+        # 实例级投影头
+        self.instance_projector = nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.ReLU(inplace=True),
+            nn.Linear(d_model, 128),
+        )
+        # 聚类级投影头：
+        self.cluster_projector = nn.Sequential(
+            nn.Linear(d_model, d_model),
+            nn.ReLU(inplace=True),
+            nn.Linear(d_model, num_clusters),
+        )
 
     def encode(self, view):
         hidden_states = self.encoder(
@@ -67,11 +79,19 @@ class ContrastiveTrajectoryModel(nn.Module):
         z2 = self.encode(view2)
         q1 = self.clustering_layer(z1)
         q2 = self.clustering_layer(z2)
+        head_in1 = self.instance_projector(z1)
+        head_in2 = self.instance_projector(z2)
+        head_cl1 = self.cluster_projector(z1).transpose(0, 1)
+        head_cl2 = self.cluster_projector(z2).transpose(0, 1)
         return {
             "z1": z1,
             "z2": z2,
             "q1": q1,
             "q2": q2,
+            "head_in1": head_in1,
+            "head_in2": head_in2,
+            "head_cl1": head_cl1,
+            "head_cl2": head_cl2,
         }
 
     def forward_mstm(
@@ -107,8 +127,19 @@ class ContrastiveTrajectoryModel(nn.Module):
         incompatible = self.load_state_dict(pretrained_state, strict=False)
         missing_keys = set(incompatible.missing_keys)
         unexpected_keys = set(incompatible.unexpected_keys)
-
-        expected_missing = {"clustering_layer.cluster_centers"}
+        if unexpected_keys:
+            raise RuntimeError(f"incompatible keys: {unexpected_keys}")
+        expected_missing = {
+            "clustering_layer.cluster_centers",
+            "instance_projector.0.weight",
+            "instance_projector.0.bias",
+            "instance_projector.2.weight",
+            "instance_projector.2.bias",
+            "cluster_projector.0.weight",
+            "cluster_projector.0.bias",
+            "cluster_projector.2.weight",
+            "cluster_projector.2.bias",
+        }
         if missing_keys != expected_missing:
             raise RuntimeError(f"unexpected missing keys: {missing_keys}")
 
