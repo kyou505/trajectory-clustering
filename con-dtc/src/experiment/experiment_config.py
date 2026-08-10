@@ -52,7 +52,6 @@ class TrainingConfig:
 @dataclass(frozen=True)
 class CheckpointConfig:
     pretrain_path: str
-    filename: str
 
 
 @dataclass(frozen=True)
