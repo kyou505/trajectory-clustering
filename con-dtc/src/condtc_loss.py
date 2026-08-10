@@ -1,5 +1,7 @@
 import torch
 from torch import nn
+
+from src.models.dec import target_distribution
 from src.models.dec import (ConDTCClusteringLoss)
 from src.models.pretrain_model import (MSTMLoss)
 
@@ -23,7 +25,8 @@ class ConDTCTotalLoss(nn.Module):
             location_targets,
             time_targets,
             q1,
-            q2
+            q2,
+            p
     ):
         representation_losses = self.mstm_loss(
             location_logits=location_logits,
@@ -34,6 +37,7 @@ class ConDTCTotalLoss(nn.Module):
         clustering_losses = self.clustering_loss(
             q1=q1,
             q2=q2,
+            p=p,
         )
         total_loss = representation_losses["loss"] + clustering_losses["loss"] * self.clustering_loss_weight
         return {
@@ -86,6 +90,8 @@ def test():
         view1=view1,
         view2=view2,
     )
+    q_average = 0.5 * (cluster_output["q1"].detach() + cluster_output["q2"].detach())
+    p = target_distribution(q_average)
     criterion = ConDTCTotalLoss(
         time_loss_weight=0.1,
         clustering_loss_weight=0.5,
@@ -97,6 +103,7 @@ def test():
         time_targets=batch["time_targets"].to(device),
         q1=cluster_output["q1"],
         q2=cluster_output["q2"],
+        p=p,
     )
     for name, value in losses.items():
         print(name, value.item())

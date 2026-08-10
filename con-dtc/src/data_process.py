@@ -73,6 +73,7 @@ class QDTrajectoryDataset(Dataset):
         pooling_mask[1 : length+1] = True
         
         return {
+            "index": torch.tensor(idx, dtype=torch.long), # 给每条轨迹增加稳定索引
             "location_ids": location_ids,
             "time_ids": time_ids,
             "attention_mask": attention_mask,

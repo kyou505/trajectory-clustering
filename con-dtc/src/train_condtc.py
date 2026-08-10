@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import torch
-from src.condtc_loss import ConDTCTotalLoss
+
+from src.cluster_init import compute_global_target_distribution
 from torch.utils.data import DataLoader
 
 from src.cluster_init import (
@@ -64,23 +65,28 @@ def create_optimizer(
     clustering_ids = {
         id(param) for param in clustering_parameters
     }
-    optimzier = torch.optim.AdamW(
+    if representation_ids & clustering_ids:
+        raise RuntimeError("Optimizer parameter groups overlap")
+    optimizer = torch.optim.AdamW(
         [
             {"params": representation_parameters, "lr": representation_learning_rate},
             {"params": clustering_parameters, "lr": clustering_learning_rate},
         ],
         weight_decay=weight_decay,
     )
-    return optimzier
+    return optimizer
 
 def train_one_step(
         model,
         batch,
         criterion,
         optimizer,
-        device
+        device,
+        global_p
 ):
     model.train()
+    indices = batch["index"].long()
+    p_batch = global_p[indices].to(device)
     batch = move_to_device(batch, device)
     optimizer.zero_grad(set_to_none=True)
     mstm_output = model.forward_mstm(
@@ -99,7 +105,10 @@ def train_one_step(
         time_targets=batch["time_targets"],
         q1=cluster_output["q1"],
         q2=cluster_output["q2"],
+        p=p_batch,
     )
+    if not torch.isfinite(losses["loss"]):
+        raise RuntimeError("Loss is not finite")
     losses["loss"].backward()
     torch.nn.utils.clip_grad_norm_(
         model.parameters(),
@@ -117,8 +126,9 @@ def train_one_epoch(
         criterion,
         optimizer,
         device,
+        global_p,
         max_batches=None,
-        log_interval=50
+        log_interval=50,
 ):
     model.train()
     metrics_sums = {}
@@ -135,6 +145,7 @@ def train_one_epoch(
             criterion=criterion,
             optimizer=optimizer,
             device=device,
+            global_p=global_p,
         )
         for name, value in metrics.items():
             metrics_sums[name] = metrics_sums.get(name, 0.0) + value * batch_size
@@ -186,13 +197,14 @@ def train_condtc(
         exist_ok=True,
     )
     output_checkpoint_path = checkpoint_dir / checkpoint_name
+    dataset = QDTrajectoryDataset()
     model = ContrastiveTrajectoryModel(num_clusters=num_clusters).to(device)
     pretrain_metadata = model.load_pretrained_components(
         pretrain_checkpoint_path,
         map_location=device,
     )
     initialization_loader = DataLoader(
-        QDTrajectoryDataset(),
+        dataset,
         batch_size=initialization_batch_size,
         shuffle=False,
         num_workers=0,
@@ -229,12 +241,19 @@ def train_condtc(
     history = []
     for epoch in range(1, num_epochs + 1):
         print(f"epoch={epoch} / num_epochs={num_epochs}")
+        global_q, global_p = compute_global_target_distribution(
+            model=model,
+            loader=initialization_loader,
+            device=device,
+            num_samples=len(dataset),
+        )
         train_metrics = train_one_epoch(
             model=model,
             loader=train_loader,
             criterion=criterion,
             optimizer=optimizer,
             device=device,
+            global_p=global_p,
             max_batches=max_train_batches,
             log_interval=log_interval,
         )

@@ -1,6 +1,8 @@
 import torch
 from sklearn.cluster import KMeans
 
+from src.models.dec import target_distribution
+
 @torch.no_grad()
 def extract_trajectory_embeddings(
         model,
@@ -60,37 +62,93 @@ def initialize_cluster_centers(
     model.clustering_layer.cluster_centers.copy_(centers)
     return kmeans
 
+@torch.no_grad()
+def compute_global_target_distribution(
+        model,
+        loader,
+        device,
+        num_samples
+):
+    model.eval()
+    global_q = None
+    seen = torch.zeros(num_samples, dtype=torch.bool)
+    for batch in loader:
+        indices = batch["index"].long()
+        view = {
+            "location_ids": batch["location_ids"].to(device),
+            "time_ids": batch["time_ids"].to(device),
+            "attention_mask": batch["attention_mask"].to(device),
+            "pooling_mask": batch["pooling_mask"].to(device),
+        }
+        embeddings = model.encode(view)
+        q = model.clustering_layer(embeddings).cpu()
+        if global_q is None:
+            global_q = torch.empty(
+                num_samples,
+                q.size(1),
+                dtype=q.dtype,
+            )
+        if indices.min().item() < 0:
+            raise ValueError("indices should be >= 0")
+        if indices.max().item() >= num_samples:
+            raise ValueError("indices should be < num_samples")
+        if seen[indices].any(): raise RuntimeError("indices should be unique")
+        global_q[indices] = q
+        seen[indices] = True
+
+    if global_q is None:
+        raise RuntimeError("global_q is None")
+
+    if not seen.all():
+        missing_count = (~seen).sum().item()
+        raise RuntimeError(f"Missing {missing_count} samples")
+
+    global_p = target_distribution(global_q)
+    return global_q, global_p
+
 def test():
     from pathlib import Path
-    from torch.utils.data import DataLoader
+    from torch.utils.data import DataLoader, Subset
 
     from src.data_process import QDTrajectoryDataset
     from src.models.contrastive_model import (
         ContrastiveTrajectoryModel,
+    )
+    from src.data_loader import (
+        create_contrastive_data_loader,
     )
 
     device = torch.device("cpu")
     project_dir = Path(__file__).resolve().parent.parent
     checkpoint_path = (project_dir / "checkpoints" / "sttraj2vec_pretrain_best.pt")
     dataset = QDTrajectoryDataset()
-    loader = DataLoader(
-        dataset,
+    subset = Subset(dataset, range(128))
+    global_loader = DataLoader(
+        subset,
         batch_size=64,
         shuffle=False,
         num_workers=0,
     )
+    contrastive_loader = create_contrastive_data_loader(
+        base_dataset=subset,
+        batch_size=8,
+        seed=42,
+        shuffle=True
+    )
+    batch = next(iter(contrastive_loader))
     model = ContrastiveTrajectoryModel(
         num_clusters=12,
     ).to(device)
-    model.load_pretrained_encoder(
+    model.load_pretrained_components(
         checkpoint_path,
         map_location=device,
     )
+
     embeddings, labels = extract_trajectory_embeddings(
         model=model,
-        loader=loader,
+        loader=global_loader,
         device=device,
-        max_batches=2,  # 本地只检查两个 batch
+        max_batches=None,
     )
 
     print("embeddings:", embeddings.shape)
@@ -111,6 +169,19 @@ def test():
         torch.from_numpy(kmeans.labels_),
         minlength=12,
     ))
+
+    global_q, global_p = compute_global_target_distribution(
+        model=model,
+        loader=global_loader,
+        device=device,
+        num_samples=128
+    )
+    print("global_q:", global_q)
+    print("global_p:", global_p)
+
+    p_batch = global_p[batch["index"]]
+    print("batch indices:", batch["index"])
+    print("P batch:", p_batch.shape)
 
 if __name__ == "__main__":
     test()

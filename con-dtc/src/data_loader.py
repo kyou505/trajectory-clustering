@@ -56,9 +56,10 @@ def create_contrastive_data_loader(
         dropout_rate=0.1,
         max_offset_minutes=2,
         shuffle=True,
+        base_dataset=None,
 ):
-    base_dataset = QDTrajectoryDataset()
-    # 生成MSTM输入和预测目标
+    if base_dataset is None:
+        base_dataset = QDTrajectoryDataset()
     mstm_dataset = MSTMDataset(
         base_dataset=base_dataset,
         mask_ratio=mask_ratio,
@@ -71,14 +72,13 @@ def create_contrastive_data_loader(
         max_offset_minutes=max_offset_minutes,
     )
     generator = torch.Generator().manual_seed(seed)
-    loader = DataLoader(
+    return DataLoader(
         dataset,
         batch_size=batch_size,
         shuffle=shuffle,
         num_workers=0,
         generator=generator,
     )
-    return loader
 
 def test():
     train_loader, valid_loader, test_loader = (
