@@ -14,7 +14,7 @@ model:
 
 loss:
   time_loss_weight: 0.1     # α=0.1（论文 Fig 5(c) 调参结论）
-  clustering_loss_weight: 0.25  # 论文 β=0.5 且 Lc 除以 2；我们的实现是求和，0.5×0.5=0.25 等价
+  clustering_loss_weight: 0.5  # 论文 β=0.5
   instance_temperature: 0.5     # 未使用（权重为 0）
   cluster_temperature: 1.0      # 未使用（权重为 0）
   instance_loss_weight: 0.0

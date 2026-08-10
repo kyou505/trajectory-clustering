@@ -52,30 +52,30 @@ class ConDTCClusteringLoss(nn.Module):
         super().__init__()
         self.dec_loss = DECLoss()
 
-    def forward(self, q1, q2, p):
-        if (q1.shape != q2.shape):
+    def forward(self, q1, q2, p1, p2):
+        if q1.shape != q2.shape:
             raise ValueError("q1 and q2 must have the same shape")
-        if (q1.shape != p.shape):
+        if q1.shape != p1.shape:
             raise ValueError("q1 and p must have the same shape")
         # P是epoch开始时固定计算的目标，不参与梯度
-        p = p.detach()
+        # p = p.detach()
         """
             论文与源码不一致：
         """
         # 论文版本：公式（16）和（18），需要分别计算 P1/P2，并进行跨视图监督
-        # p1 = target_distribution(q1)
-        # p2 = target_distribution(q2)
-        # loss_view1 = self.dec_loss(q=q1, p=p2)
-        # loss_view2 = self.dec_loss(q=q2, p=p1)
+        p1 = p1.detach()
+        p2 = p2.detach()
+        loss_q1_from_p2 = self.dec_loss(q=q1, p=p2)
+        loss_q2_from_p1 = self.dec_loss(q=q2, p=p1)
         # 源码版本 exp2.py L2459
-        loss_view1 = self.dec_loss(q1, p)
-        loss_view2 = self.dec_loss(q2, p)
+        # loss_view1 = self.dec_loss(q1, p)
+        # loss_view2 = self.dec_loss(q2, p)
 
-        loss = (loss_view1 + loss_view2)
+        loss = 0.5 * (loss_q1_from_p2 + loss_q2_from_p1)
         return {
             "loss": loss,
-            "loss_view1": loss_view1,
-            "loss_view2": loss_view2
+            "loss_view1": loss_q1_from_p2,
+            "loss_view2": loss_q2_from_p1
         }
 
 

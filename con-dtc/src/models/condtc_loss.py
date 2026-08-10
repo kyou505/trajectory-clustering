@@ -39,7 +39,8 @@ class ConDTCTotalLoss(nn.Module):
             time_targets,
             q1,
             q2,
-            p,
+            p1,
+            p2,
             head_in1,
             head_in2,
             head_cl1,
@@ -56,7 +57,8 @@ class ConDTCTotalLoss(nn.Module):
         clustering_losses = self.clustering_loss(
             q1=q1,
             q2=q2,
-            p=p,
+            p1=p1,
+            p2=p2,
         )
         total_loss = (representation_losses["loss"]
                       + clustering_losses["loss"] * self.clustering_loss_weight
