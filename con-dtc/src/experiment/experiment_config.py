@@ -53,6 +53,12 @@ class TrainingConfig:
 class CheckpointConfig:
     pretrain_path: str
 
+@dataclass(frozen=True)
+class TargetHistoryConfig:
+    enabled: bool
+    momentum: float
+    save_interval: int
+    save_raw_assignments: bool
 
 @dataclass(frozen=True)
 class ConDTCExperimentConfig:
@@ -61,6 +67,7 @@ class ConDTCExperimentConfig:
     model: ModelConfig
     loss: LossConfig
     optimizer: OptimizerConfig
+    target_history: TargetHistoryConfig
     training: TrainingConfig
     checkpoint: CheckpointConfig
 
@@ -87,6 +94,7 @@ def load_experiment_config(config_path):
         "loss",
         "optimizer",
         "training",
+        "target_history",
         "checkpoint",
     }
 
@@ -114,6 +122,7 @@ def load_experiment_config(config_path):
         optimizer=OptimizerConfig(
             **raw_config["optimizer"]
         ),
+        target_history=TargetHistoryConfig(**raw_config["target_history"]),
         training=TrainingConfig(
             **raw_config["training"]
         ),
