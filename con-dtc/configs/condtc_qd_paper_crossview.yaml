@@ -86,6 +86,19 @@ optimizer:
   # PyTorch AdamW 和作者源码均采用默认值 0.01，因此按源码回退规则设置。
   weight_decay: 0.01
 
+target_history:
+  # 是否使用跨 epoch 的软聚类分配 EMA。
+  enabled: true
+
+  # EMA 动量；历史权重越高，目标越稳定，但响应模型变化越慢。
+  momentum: 0.8
+
+  # 每隔多少个 epoch 保存一次完整软分配。
+  save_interval: 1
+
+  # 是否同时保存未经 EMA 的原始 Q1/Q2，用于稳定性分析。
+  save_raw_assignments: true
+
 training:
   # 论文没有报告准确的聚类训练轮数。公开青岛脚本为 --epoch 1，
   # 论文图 7 显示聚类层在 6 个 epoch 内趋于稳定。实测 1 个 epoch

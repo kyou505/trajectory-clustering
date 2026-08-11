@@ -1,3 +1,4 @@
+
 import torch
 from sklearn.cluster import KMeans
 
@@ -171,6 +172,48 @@ def compute_global_target_distribution(
 
     global_p = target_distribution(global_q)
     return global_q, global_p
+
+class CrossViewSoftTargetEMA:
+    def __init__(self, momentum):
+        if not 0.0 <= momentum < 1.0:
+            raise ValueError("momentum must be in [0, 1)")
+        self.momentum = momentum
+        self.ema_q1 = None
+        self.ema_q2 = None
+
+    @torch.no_grad()
+    def update(self, q1, q2):
+        q1 = q1.detach().cpu()
+        q2 = q2.detach().cpu()
+
+        if self.ema_q1 is None:
+            self.ema_q1 = q1.clone()
+            self.ema_q2 = q2.clone()
+        else:
+            self.ema_q1.mul_(self.momentum).add_(q1, alpha=1 - self.momentum)
+            self.ema_q2.mul_(self.momentum).add_(q2, alpha=1 - self.momentum)
+        # 避免浮点误差导致每行概率和偏离 1
+        self.ema_q1.div_(self.ema_q1.sum(dim=1, keepdim=True).clamp_min(1e-12))
+        self.ema_q2.div_(self.ema_q2.sum(dim=1, keepdim=True).clamp_min(1e-12))
+        return {
+            "q1": self.ema_q1.clone(),
+            "q2": self.ema_q2.clone(),
+            "p1": target_distribution(self.ema_q1),
+            "p2": target_distribution(self.ema_q2),
+        }
+
+    def state_dict(self):
+        return {
+            "momentum": self.momentum,
+            "ema_q1": self.ema_q1,
+            "ema_q2": self.ema_q2,
+        }
+
+    def load_state_dict(self, state_dict):
+        self.momentum = state_dict["momentum"]
+        self.ema_q1 = state_dict["ema_q1"]
+        self.ema_q2 = state_dict["ema_q2"]
+
 
 def test():
     from pathlib import Path

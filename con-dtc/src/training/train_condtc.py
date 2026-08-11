@@ -15,6 +15,7 @@ from src.training.cluster_init import (
     compute_global_cross_view_targets,
     extract_trajectory_embeddings,
     initialize_cluster_centers,
+    CrossViewSoftTargetEMA
 )
 
 def get_device():
@@ -196,6 +197,7 @@ def train_condtc(
         max_initialization_batches=None,
         max_train_batches=None,
         log_interval=50,
+        target_ema_momentum=0.99,
         output_dir=None,
         pretrain_checkpoint_path=None,
 ):
@@ -223,6 +225,8 @@ def train_condtc(
         exist_ok=True,
     )
     output_checkpoint_path = checkpoint_dir / "condtc_best.pt"
+    target_history_dir = output_dir / "target_history"
+    target_history_dir.mkdir(parents=True, exist_ok=True)
     dataset = QDTrajectoryDataset()
     model = ContrastiveTrajectoryModel(num_clusters=num_clusters).to(device)
     pretrain_metadata = model.load_pretrained_components(
@@ -273,17 +277,22 @@ def train_condtc(
         shuffle=False,
         num_workers=0,
     )
+    target_ema = CrossViewSoftTargetEMA(momentum=target_ema_momentum)
     best_train_loss = float("inf")
     history = []
     for epoch in range(1, num_epochs + 1):
         print(f"epoch={epoch} / num_epochs={num_epochs}")
         # 固定本 epoch 的两个增强视图
         train_loader.dataset.set_epoch(epoch)
-        global_targets = compute_global_cross_view_targets(
+        current_targets = compute_global_cross_view_targets(
             model=model,
             loader=target_loader,
             device=device,
             num_samples=len(dataset),
+        )
+        ema_targets=target_ema.update(
+            q1=current_targets["q1"],
+            q2=current_targets["q2"],
         )
         train_metrics = train_one_epoch(
             model=model,
@@ -291,8 +300,8 @@ def train_condtc(
             criterion=criterion,
             optimizer=optimizer,
             device=device,
-            global_p1=global_targets["p1"],
-            global_p2=global_targets["p2"],
+            global_p1=ema_targets["p1"],
+            global_p2=ema_targets["p2"],
             max_batches=max_train_batches,
             log_interval=log_interval,
         )
@@ -304,6 +313,23 @@ def train_condtc(
             f"cluster_nce={train_metrics['cluster_contrastive_loss']:.4f} "
             f"dec={train_metrics['clustering_loss']:.4f}"
         )
+        torch.save(
+            {
+                "epoch": epoch,
+                "q1": current_targets["q1"],
+                "q2": current_targets["q2"],
+                "ema_q1": ema_targets["q1"],
+                "ema_q2": ema_targets["q2"],
+                "p1": ema_targets["p1"],
+                "p2": ema_targets["p2"],
+                "cluster_centers": (
+                    model.clustering_layer.cluster_centers
+                    .detach()
+                    .cpu()
+                ),
+            },
+            target_history_dir / f"epoch_{epoch:03d}.pt",
+        )
         history.append({"epoch": epoch, "train": train_metrics})
         if train_metrics["loss"] < best_train_loss:
             best_train_loss = train_metrics["loss"]
@@ -313,6 +339,7 @@ def train_condtc(
                 "optimizer_state_dict": optimizer.state_dict(),
                 "train_metrics": train_metrics,
                 "kmeans_inertia": float(kmeans.inertia_),
+                "target_ema_state_dict": target_ema.state_dict(),
                 "configs": {
                     "batch_size": batch_size,
                     "num_clusters": num_clusters,

@@ -129,6 +129,7 @@ def main():
                 log_interval=config.training.log_interval,
                 output_dir=run_dir,
                 pretrain_checkpoint_path=config.checkpoint.pretrain_path,
+                target_ema_momentum=config.target_history.momentum,
             )
 
             print("evaluating:", checkpoint_path)
