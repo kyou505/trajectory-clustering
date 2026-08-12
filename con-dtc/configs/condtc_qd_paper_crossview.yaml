@@ -91,7 +91,7 @@ target_history:
   enabled: true
 
   # EMA 动量；历史权重越高，目标越稳定，但响应模型变化越慢。
-  momentum: 0.8
+  momentum: 0.5
 
   # 每隔多少个 epoch 保存一次完整软分配。
   save_interval: 1

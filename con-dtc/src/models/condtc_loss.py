@@ -45,6 +45,7 @@ class ConDTCTotalLoss(nn.Module):
             head_in2,
             head_cl1,
             head_cl2,
+            sample_weight=None,
     ):
         representation_losses = self.mstm_loss(
             location_logits=location_logits,
@@ -59,6 +60,7 @@ class ConDTCTotalLoss(nn.Module):
             q2=q2,
             p1=p1,
             p2=p2,
+            sample_weight=sample_weight,
         )
         total_loss = (representation_losses["loss"]
                       + clustering_losses["loss"] * self.clustering_loss_weight

@@ -42,9 +42,25 @@ def target_distribution(q):
     return p
 
 class DECLoss(nn.Module):
-    def forward(self, q, p):
+    def forward(
+            self,
+            q,
+            p,
+            sample_weight=None,
+    ):
         log_q = q.clamp(min=1e-12).log()
-        loss = F.kl_div(input=log_q, target=p, reduction='batchmean')
+        per_sample_loss = F.kl_div(
+            input=log_q,
+            target=p,
+            reduction="none",
+        ).sum(dim=1)
+        if sample_weight is None:
+            return per_sample_loss.mean()
+        sample_weight = sample_weight.detach().to(
+            device=q.device,
+            dtype=q.dtype,
+        )
+        loss = (per_sample_loss * sample_weight).sum() / sample_weight.sum()
         return loss
 
 class ConDTCClusteringLoss(nn.Module):
@@ -52,7 +68,7 @@ class ConDTCClusteringLoss(nn.Module):
         super().__init__()
         self.dec_loss = DECLoss()
 
-    def forward(self, q1, q2, p1, p2):
+    def forward(self, q1, q2, p1, p2, sample_weight=None):
         if q1.shape != q2.shape:
             raise ValueError("q1 and q2 must have the same shape")
         if q1.shape != p1.shape:
@@ -65,8 +81,8 @@ class ConDTCClusteringLoss(nn.Module):
         # 论文版本：公式（16）和（18），需要分别计算 P1/P2，并进行跨视图监督
         p1 = p1.detach()
         p2 = p2.detach()
-        loss_q1_from_p2 = self.dec_loss(q=q1, p=p2)
-        loss_q2_from_p1 = self.dec_loss(q=q2, p=p1)
+        loss_q1_from_p2 = self.dec_loss(q=q1, p=p2, sample_weight=sample_weight)
+        loss_q2_from_p1 = self.dec_loss(q=q2, p=p1, sample_weight=sample_weight)
         # 源码版本 exp2.py L2459
         # loss_view1 = self.dec_loss(q1, p)
         # loss_view2 = self.dec_loss(q2, p)
