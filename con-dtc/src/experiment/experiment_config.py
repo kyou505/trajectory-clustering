@@ -57,6 +57,7 @@ class CheckpointConfig:
 class TargetHistoryConfig:
     enabled: bool
     momentum: float
+    minimum_weight: float
     save_interval: int
     save_raw_assignments: bool
 

@@ -93,6 +93,9 @@ target_history:
   # EMA 动量；历史权重越高，目标越稳定，但响应模型变化越慢。
   momentum: 0.5
 
+  # 可靠性权重下限；1.0 时全体权重恒为 1，等价于关闭 DEC 加权。
+  minimum_weight: 0.2
+
   # 每隔多少个 epoch 保存一次完整软分配。
   save_interval: 1
 

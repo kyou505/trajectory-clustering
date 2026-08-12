@@ -203,6 +203,7 @@ def train_condtc(
         max_train_batches=None,
         log_interval=50,
         target_ema_momentum=0.99,
+        target_ema_minimum_weight=0.2,
         output_dir=None,
         pretrain_checkpoint_path=None,
 ):
@@ -282,7 +283,10 @@ def train_condtc(
         shuffle=False,
         num_workers=0,
     )
-    target_ema = CrossViewSoftTargetEMA(momentum=target_ema_momentum)
+    target_ema = CrossViewSoftTargetEMA(
+        momentum=target_ema_momentum,
+        minimum_weight=target_ema_minimum_weight,
+    )
     best_train_loss = float("inf")
     history = []
     for epoch in range(1, num_epochs + 1):

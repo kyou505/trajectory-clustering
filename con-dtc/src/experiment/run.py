@@ -130,6 +130,7 @@ def main():
                 output_dir=run_dir,
                 pretrain_checkpoint_path=config.checkpoint.pretrain_path,
                 target_ema_momentum=config.target_history.momentum,
+                target_ema_minimum_weight=config.target_history.minimum_weight,
             )
 
             print("evaluating:", checkpoint_path)
