@@ -84,11 +84,13 @@ def train_one_step(
         device,
         global_p1,
         global_p2,
+        global_sample_weight,
 ):
     model.train()
     indices = batch["index"].long()
     p1_batch = global_p1[indices].to(device)
     p2_batch = global_p2[indices].to(device)
+    sample_weight_batch = global_sample_weight[indices].to(device)
     batch = move_to_device(batch, device)
     optimizer.zero_grad(set_to_none=True)
     mstm_output = model.forward_mstm(
@@ -113,6 +115,7 @@ def train_one_step(
         head_in2=cluster_output["head_in2"],
         head_cl1=cluster_output["head_cl1"],
         head_cl2=cluster_output["head_cl2"],
+        sample_weight=sample_weight_batch,
     )
     if not torch.isfinite(losses["loss"]):
         raise RuntimeError("Loss is not finite")
@@ -135,6 +138,7 @@ def train_one_epoch(
         device,
         global_p1,
         global_p2,
+        global_sample_weight,
         max_batches=None,
         log_interval=50,
 ):
@@ -155,6 +159,7 @@ def train_one_epoch(
             device=device,
             global_p1=global_p1,
             global_p2=global_p2,
+            global_sample_weight=global_sample_weight,
         )
         for name, value in metrics.items():
             metrics_sums[name] = metrics_sums.get(name, 0.0) + value * batch_size
@@ -302,6 +307,7 @@ def train_condtc(
             device=device,
             global_p1=ema_targets["p1"],
             global_p2=ema_targets["p2"],
+            global_sample_weight=ema_targets["sample_weight"],
             max_batches=max_train_batches,
             log_interval=log_interval,
         )
@@ -322,6 +328,14 @@ def train_condtc(
                 "ema_q2": ema_targets["q2"],
                 "p1": ema_targets["p1"],
                 "p2": ema_targets["p2"],
+
+                "raw_js_view1": ema_targets["raw_js_view1"],
+                "raw_js_view2": ema_targets["raw_js_view2"],
+                "raw_js_divergence": ema_targets["raw_js_divergence"],
+                "relative_stability": ema_targets["relative_stability"],
+                "margin_confidence": ema_targets["margin_confidence"],
+                "reliability": ema_targets["reliability"],
+                "sample_weight": ema_targets["sample_weight"],
                 "cluster_centers": (
                     model.clustering_layer.cluster_centers
                     .detach()
