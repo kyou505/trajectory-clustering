@@ -174,10 +174,14 @@ def compute_global_target_distribution(
     return global_q, global_p
 
 class CrossViewSoftTargetEMA:
-    def __init__(self, momentum):
+    def __init__(self, momentum, minimum_weight=0.2):
         if not 0.0 <= momentum < 1.0:
             raise ValueError("momentum must be in [0, 1)")
+        if not 0.0 < minimum_weight <= 1.0:
+            raise ValueError("minimum_weight must be in (0, 1]")
         self.momentum = momentum
+        # minimum_weight=1.0 时全体样本权重恒为 1，数学上等价于关闭加权
+        self.minimum_weight = minimum_weight
         self.ema_q1 = None
         self.ema_q2 = None
 
@@ -217,7 +221,7 @@ class CrossViewSoftTargetEMA:
             reliability_output = compute_reliability_weight(
                 relative_stability=relative_stability,
                 margin_confidence=margin_confidence,
-                minimum_weight=0.2,
+                minimum_weight=self.minimum_weight,
             )
             reliability = reliability_output["reliability"]
             sample_weight = reliability_output["sample_weight"]
