@@ -27,7 +27,7 @@
 
 experiment:
   # 实现设置：实验名称；用于和此前使用单个目标分布 P 的实验区分。
-  name: condtc_qd_paper_crossview
+  name: condtc_qd_ema_late_start_e4
 
   # 实现设置：保存实验快照、日志和模型的根目录。
   output_root: runs
@@ -90,13 +90,16 @@ target_history:
   # 是否使用跨 epoch 的软聚类分配 EMA。
   enabled: true
 
-  start_epoch: 1
+  # epoch 1～3使用当前目标；
+  # epoch 3结束前初始化EMA；
+  # epoch 4～6使用EMA目标。
+  start_epoch: 4
 
   # EMA 动量；历史权重越高，目标越稳定，但响应模型变化越慢。
-  momentum: 0.5
+  momentum: 0.7
 
   # 可靠性权重下限；1.0 时全体权重恒为 1，等价于关闭 DEC 加权。
-  minimum_weight: 0.2
+  minimum_weight: 1.0
 
   # 每隔多少个 epoch 保存一次完整软分配。
   save_interval: 1
@@ -133,4 +136,4 @@ checkpoint:
   #     补偿弱预训练，而本配置 beta=0.5 无此补偿，故延长预训练。
   #   - 随机种子 = 19721013：论文未说明，采用公开脚本设置。
   # 不要让本配置加载此前训练 10 或 30 个 epoch 得到的预训练模型。
-  pretrain_path: checkpoints/sttraj2vec_pretrain_paper_crossview.pt
+  pretrain_path: checkpoints/sttraj2vec_pretrain_paper_15ep.pt

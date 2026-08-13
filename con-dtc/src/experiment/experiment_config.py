@@ -56,6 +56,7 @@ class CheckpointConfig:
 @dataclass(frozen=True)
 class TargetHistoryConfig:
     enabled: bool
+    start_epoch: int
     momentum: float
     minimum_weight: float
     save_interval: int

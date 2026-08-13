@@ -202,6 +202,7 @@ def train_condtc(
         max_initialization_batches=None,
         max_train_batches=None,
         log_interval=50,
+        target_ema_start_epoch=1,
         target_ema_momentum=0.99,
         target_ema_minimum_weight=0.2,
         output_dir=None,
@@ -291,6 +292,7 @@ def train_condtc(
     history = []
     for epoch in range(1, num_epochs + 1):
         print(f"epoch={epoch} / num_epochs={num_epochs}")
+        ema_enabled = epoch >= target_ema_start_epoch
         # 固定本 epoch 的两个增强视图
         train_loader.dataset.set_epoch(epoch)
         current_targets = compute_global_cross_view_targets(
@@ -299,19 +301,56 @@ def train_condtc(
             device=device,
             num_samples=len(dataset),
         )
-        ema_targets=target_ema.update(
-            q1=current_targets["q1"],
-            q2=current_targets["q2"],
+        num_samples = current_targets["q1"].size(0)
+        nan_values = torch.full(
+            (num_samples,),
+            float("nan"),
+            dtype=current_targets["q1"].dtype,
         )
+        ema_targets = {
+            # EMA尚未初始化时，用当前分配占位
+            "q1": current_targets["q1"],
+            "q2": current_targets["q2"],
+            "p1": current_targets["p1"],
+            "p2": current_targets["p2"],
+            "raw_js_view1": nan_values.clone(),
+            "raw_js_view2": nan_values.clone(),
+            "raw_js_divergence": nan_values.clone(),
+            "relative_stability": nan_values.clone(),
+            "margin_confidence": nan_values.clone(),
+            "reliability": nan_values.clone(),
+            "sample_weight": torch.ones(
+                num_samples,
+                dtype=current_targets["q1"].dtype,
+            ),
+        }
+        ema_initialized = False
+        if epoch < target_ema_start_epoch:
+            train_p1 = current_targets["p1"]
+            train_p2 = current_targets["p2"]
+            if epoch == target_ema_start_epoch - 1:
+                target_ema.update(
+                    q1=current_targets["q1"],
+                    q2=current_targets["q2"],
+                )
+                ema_initialized = True
+        else:
+            ema_targets=target_ema.update(
+                q1=current_targets["q1"],
+                q2=current_targets["q2"],
+            )
+            ema_initialized = True
+            train_p1 = ema_targets["p1"]
+            train_p2 = ema_targets["p2"]
         train_metrics = train_one_epoch(
             model=model,
             loader=train_loader,
             criterion=criterion,
             optimizer=optimizer,
             device=device,
-            global_p1=ema_targets["p1"],
-            global_p2=ema_targets["p2"],
-            global_sample_weight=ema_targets["sample_weight"],
+            global_p1=train_p1,
+            global_p2=train_p2,
+            global_sample_weight=torch.ones(len(dataset), dtype=train_p1.dtype),
             max_batches=max_train_batches,
             log_interval=log_interval,
         )
@@ -332,7 +371,8 @@ def train_condtc(
                 "ema_q2": ema_targets["q2"],
                 "p1": ema_targets["p1"],
                 "p2": ema_targets["p2"],
-
+                "ema_enabled": ema_enabled,
+                "ema_initialized": ema_initialized,
                 "raw_js_view1": ema_targets["raw_js_view1"],
                 "raw_js_view2": ema_targets["raw_js_view2"],
                 "raw_js_divergence": ema_targets["raw_js_divergence"],
