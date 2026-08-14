@@ -61,6 +61,9 @@ class TargetHistoryConfig:
     minimum_weight: float
     save_interval: int
     save_raw_assignments: bool
+    # false：EMA 启用后立即使用目标 minimum_weight
+    # true：从 1.0 线性下降到目标 minimum_weight
+    weight_warmup: bool = False
 
 @dataclass(frozen=True)
 class ConDTCExperimentConfig:
@@ -174,6 +177,11 @@ def validate_experiment_config(config):
     if config.optimizer.clustering_learning_rate <= 0:
         raise ValueError(
             "clustering_learning_rate must be positive"
+        )
+
+    if not 0.0 < config.target_history.minimum_weight <= 1.0:
+        raise ValueError(
+            "target_history.minimum_weight must be in (0, 1]"
         )
 
     for name in (

@@ -129,6 +129,7 @@ def main():
                 log_interval=config.training.log_interval,
                 output_dir=run_dir,
                 pretrain_checkpoint_path=config.checkpoint.pretrain_path,
+                target_ema_weight_warmup=config.target_history.weight_warmup,
                 target_ema_momentum=config.target_history.momentum,
                 target_ema_start_epoch=config.target_history.start_epoch,
                 target_ema_minimum_weight=config.target_history.minimum_weight,

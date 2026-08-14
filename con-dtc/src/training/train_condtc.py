@@ -204,6 +204,7 @@ def train_condtc(
         log_interval=50,
         target_ema_start_epoch=1,
         target_ema_momentum=0.99,
+        target_ema_weight_warmup=False,
         target_ema_minimum_weight=0.2,
         output_dir=None,
         pretrain_checkpoint_path=None,
@@ -293,6 +294,13 @@ def train_condtc(
     for epoch in range(1, num_epochs + 1):
         print(f"epoch={epoch} / num_epochs={num_epochs}")
         ema_enabled = epoch >= target_ema_start_epoch
+        effective_minimum_weight = compute_effective_minimum_weight(
+            epoch=epoch,
+            start_epoch=target_ema_start_epoch,
+            num_epochs=num_epochs,
+            target_minimum_weight=target_ema_minimum_weight,
+            use_warmup=target_ema_weight_warmup,
+        )
         # 固定本 epoch 的两个增强视图
         train_loader.dataset.set_epoch(epoch)
         current_targets = compute_global_cross_view_targets(
@@ -346,7 +354,12 @@ def train_condtc(
             ema_initialized = True
             train_p1 = ema_targets["p1"]
             train_p2 = ema_targets["p2"]
-            train_sample_weight = ema_targets["sample_weight"]
+            reliability = ema_targets["reliability"]
+            if torch.isfinite(reliability).all():
+                train_sample_weight = effective_minimum_weight + (1.0 - effective_minimum_weight) * ema_targets["reliability"]
+            else:
+                train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
+            ema_targets["sample_weight"] = train_sample_weight.clone()
         train_metrics = train_one_epoch(
             model=model,
             loader=train_loader,
@@ -385,6 +398,7 @@ def train_condtc(
                 "margin_confidence": ema_targets["margin_confidence"],
                 "reliability": ema_targets["reliability"],
                 "sample_weight": ema_targets["sample_weight"],
+                "effective_minimum_weight": effective_minimum_weight,
                 "cluster_centers": (
                     model.clustering_layer.cluster_centers
                     .detach()
@@ -422,7 +436,26 @@ def train_condtc(
     print("best train_loss: ", best_train_loss)
     return model, history, output_checkpoint_path
 
-
+def compute_effective_minimum_weight(
+        epoch,
+        start_epoch,
+        num_epochs,
+        target_minimum_weight,
+        use_warmup,
+):
+    # EMA 启用前不进行样本加权
+    if epoch < start_epoch:
+        return 1.0
+    # 不启用 warm-up，EMA 开始后立即使用目标下限
+    if not use_warmup:
+        return target_minimum_weight
+    # 从 start_epoch 到最后一个 epoch 的插值区间数
+    warmup_length = max(num_epochs - start_epoch, 1)
+    # 当前 warm-up 进度，限制在 [0, 1]
+    progress = (epoch - start_epoch) / warmup_length
+    progress = min(max(progress, 0.0), 1.0)
+    # 从 1.0 线性下降到 target_minimum_weight
+    return 1.0 - progress * (1.0 - target_minimum_weight)
 
 
 if __name__ == "__main__":
