@@ -328,6 +328,10 @@ def train_condtc(
         if epoch < target_ema_start_epoch:
             train_p1 = current_targets["p1"]
             train_p2 = current_targets["p2"]
+            train_sample_weight = torch.ones(
+                num_samples,
+                dtype=current_targets["q1"].dtype,
+            )
             if epoch == target_ema_start_epoch - 1:
                 target_ema.update(
                     q1=current_targets["q1"],
@@ -342,6 +346,7 @@ def train_condtc(
             ema_initialized = True
             train_p1 = ema_targets["p1"]
             train_p2 = ema_targets["p2"]
+            train_sample_weight = ema_targets["sample_weight"]
         train_metrics = train_one_epoch(
             model=model,
             loader=train_loader,
@@ -350,7 +355,7 @@ def train_condtc(
             device=device,
             global_p1=train_p1,
             global_p2=train_p2,
-            global_sample_weight=torch.ones(len(dataset), dtype=train_p1.dtype),
+            global_sample_weight=train_sample_weight,
             max_batches=max_train_batches,
             log_interval=log_interval,
         )

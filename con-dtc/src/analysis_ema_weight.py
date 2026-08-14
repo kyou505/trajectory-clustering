@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from scipy.optimize import linear_sum_assignment
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from torch.utils.data import DataLoader
 
 from src.data.data_process import QDTrajectoryDataset
@@ -55,11 +56,75 @@ def hungarian_mapped(preds, labels, num_clusters=NUM_CLUSTERS):
     mapping = {int(r): int(c) for r, c in zip(rows, cols)}
     return np.array([mapping[int(p)] for p in preds])
 
+def print_pair_separation_analysis(
+        name,
+        labels,
+        raw_predictions,
+        label_pairs=((1, 2), (4, 5), (7, 8)),
+        num_clusters=NUM_CLUSTERS,
+):
+    """
+        不经过匈牙利映射，分析两个真实label是否进入不同预测簇。
+
+        overlap:
+            两个label的预测簇分布重叠程度。
+            1表示完全重叠，0表示完全分离。
+    """
+    labels = np.asarray(labels)
+    raw_predictions = np.asarray(raw_predictions)
+    print(f"\n--- {name} 类别对映射无关分析 ---")
+    print(
+        f"{'类别对':>8s} "
+        f"{'A主簇':>8s} "
+        f"{'A占比':>8s} "
+        f"{'B主簇':>8s} "
+        f"{'B占比':>8s} "
+        f"{'同主簇':>8s} "
+        f"{'重叠度':>8s} "
+        f"{'NMI':>8s} "
+        f"{'ARI':>8s}"
+    )
+    for label_a, label_b in label_pairs:
+        pair_mask = (labels == label_a) | (labels == label_b)
+        pair_labels = labels[pair_mask]
+        pair_predictions = raw_predictions[pair_mask]
+        counts_a = np.bincount(raw_predictions[labels == label_a], minlength=num_clusters)
+        counts_b = np.bincount(raw_predictions[labels == label_b], minlength=num_clusters)
+        dominant_a = int(counts_a.argmax())
+        dominant_b = int(counts_b.argmax())
+        ratio_a = counts_a[dominant_a] / counts_a.sum()
+        ratio_b = counts_b[dominant_b] / counts_b.sum()
+        distribution_a = counts_a / counts_a.sum()
+        distribution_b = counts_b / counts_b.sum()
+        overlap = np.minimum(distribution_a, distribution_b).sum()
+        nmi = normalized_mutual_info_score(pair_labels, pair_predictions, average_method="geometric")
+        ari = adjusted_rand_score(pair_labels, pair_predictions)
+        print(
+            f"{label_a}/{label_b: <5d} "
+            f"{dominant_a:8d} "
+            f"{ratio_a:8.3f} "
+            f"{dominant_b:8d} "
+            f"{ratio_b:8.3f} "
+            f"{str(dominant_a == dominant_b):>8s} "
+            f"{overlap:8.3f} "
+            f"{nmi:8.3f} "
+            f"{ari:8.3f}"
+        )
 
 def load_training_diagnostics(run_dir):
     """读取 target_history，返回各诊断量的全程均值（跳过首 epoch 哨兵）。"""
     files = sorted(glob.glob(str(Path(run_dir) / "target_history" / "epoch_*.pt")))
-    history = [torch.load(f, weights_only=True) for f in files][1:]
+    all_history = [torch.load(f, weights_only=True) for f in files]
+    has_ema_enabled = any(
+        "ema_enabled" in item
+        for item in all_history
+    )
+    if has_ema_enabled:
+        history = [
+            item for item in all_history if item["ema_enabled"]
+        ]
+    else:
+        history = all_history[1:]
     if not history:
         raise RuntimeError(f"no usable target_history epochs in {run_dir}")
     mean_of = lambda key: torch.stack([h[key] for h in history]).mean(0).numpy()
@@ -70,6 +135,149 @@ def load_training_diagnostics(run_dir):
         "raw_js_view1": mean_of("raw_js_view1"),
         "raw_js_view2": mean_of("raw_js_view2"),
     }
+
+def load_current_assignment_history(run_dir):
+    """
+        读取每个epoch的当前双视图共识Q。
+        使用当前Q而不是EMA Q，因为需要观察模型本身是往返波动还是持续迁移。
+    """
+    files = sorted(
+        glob.glob(str(Path(run_dir) / "target_history" / "epoch_*.pt"))
+    )
+    history = [
+        torch.load(file, map_location="cpu", weights_only=True)
+        for file in files
+    ]
+    consensus = torch.stack([
+        0.5 * (item["q1"] + item["q2"])
+        for item in history
+    ])
+    return consensus
+
+def compute_assignment_dynamics(consensus, eps=1e-12):
+    hard_assignments = consensus.argmax(dim=-1)
+    changes = (hard_assignments[1:] != hard_assignments[:-1])
+    flip_count = changes.sum(dim=0)
+    ever_changed = flip_count > 0
+    # 发生过变化，最终又回到初始簇
+    returned_to_initial = (ever_changed & (hard_assignments[-1] == hard_assignments[0]))
+    # 任意连续三个epoch出现 A -> B -> A
+    aba_reversal = (
+        (hard_assignments[:-2] == hard_assignments[2:])
+        & (hard_assignments[:-2] != hard_assignments[1:-1])
+    ).any(dim=0)
+    # 最终簇不同于初始簇，且最后两个epoch保持相同
+    persistent_migration = (
+        ever_changed
+        & (hard_assignments[-1] != hard_assignments[0])
+        & (hard_assignments[-2] == hard_assignments[-1])
+    )
+    # 最后一个epoch仍在变化
+    ongoing_migration = (
+            ever_changed
+            & (
+                    hard_assignments[-1]
+                    != hard_assignments[0]
+            )
+            & (
+                    hard_assignments[-1]
+                    != hard_assignments[-2]
+            )
+    )
+
+    # 连续变化方向的一致性
+    deltas = consensus[1:] - consensus[:-1]
+    previous_delta = deltas[:-1]
+    current_delta = deltas[1:]
+
+    numerator = (
+            previous_delta * current_delta
+    ).sum(dim=-1)
+
+    denominator = (
+            previous_delta.norm(dim=-1)
+            * current_delta.norm(dim=-1)
+    )
+
+    direction_cosine = numerator / denominator.clamp_min(eps)
+    valid_direction = denominator > eps
+
+    direction_cosine = torch.where(
+        valid_direction,
+        direction_cosine,
+        torch.full_like(
+            direction_cosine,
+            float("nan"),
+        ),
+    )
+
+    mean_direction_cosine = torch.nanmean(
+        direction_cosine,
+        dim=0,
+    )
+
+    return {
+        "flip_count": flip_count.numpy(),
+        "ever_changed": ever_changed.numpy(),
+        "returned_to_initial": returned_to_initial.numpy(),
+        "aba_reversal": aba_reversal.numpy(),
+        "persistent_migration": persistent_migration.numpy(),
+        "ongoing_migration": ongoing_migration.numpy(),
+        "direction_cosine": mean_direction_cosine.numpy(),
+    }
+
+def print_assignment_dynamics(
+        name,
+        run_dir,
+        labels,
+        target_labels=(4, 5, 7, 8),
+):
+    consensus = load_current_assignment_history(
+        run_dir
+    )
+    dynamics = compute_assignment_dynamics(
+        consensus
+    )
+
+    print(f"\n--- {name} 分配动态分析 ---")
+    print(
+        f"{'label':>5s} "
+        f"{'发生变化':>10s} "
+        f"{'回到初始':>10s} "
+        f"{'A-B-A':>10s} "
+        f"{'持续迁移':>10s} "
+        f"{'仍在迁移':>10s} "
+        f"{'平均翻转':>10s} "
+        f"{'方向余弦':>10s}"
+    )
+
+    for label in target_labels:
+        mask = labels == label
+
+        direction = dynamics[
+            "direction_cosine"
+        ][mask]
+
+        finite_direction = direction[
+            np.isfinite(direction)
+        ]
+
+        mean_direction = (
+            finite_direction.mean()
+            if finite_direction.size > 0
+            else float("nan")
+        )
+
+        print(
+            f"{label:5d} "
+            f"{dynamics['ever_changed'][mask].mean():10.1%} "
+            f"{dynamics['returned_to_initial'][mask].mean():10.1%} "
+            f"{dynamics['aba_reversal'][mask].mean():10.1%} "
+            f"{dynamics['persistent_migration'][mask].mean():10.1%} "
+            f"{dynamics['ongoing_migration'][mask].mean():10.1%} "
+            f"{dynamics['flip_count'][mask].mean():10.3f} "
+            f"{mean_direction:10.3f}"
+        )
 
 def main_error_destination(
         mapped_predictions,
@@ -272,6 +480,8 @@ def analyze(run_1, run_2, batch_size=256):
     preds_run1, labels_t = predict_clean(run_1, loader, device)
     preds_run2, _ = predict_clean(run_2, loader, device)
     y = labels_t.numpy()
+    print_pair_separation_analysis(name="run1", labels=y, raw_predictions=preds_run1.numpy())
+    print_pair_separation_analysis(name="run2", labels=y, raw_predictions=preds_run2.numpy())
     mapped_run1 = hungarian_mapped(preds_run1, labels_t)
     mapped_run2 = hungarian_mapped(preds_run2, labels_t)
     ok_run1 = mapped_run1 == y
@@ -342,6 +552,11 @@ def analyze(run_1, run_2, batch_size=256):
         f"\n变差组中训练期均权 < 0.4 的比例: {low.mean():.0%}  "
         f"(都对组: {(diag['sample_weight'][both_ok] < 0.4).mean():.0%})"
     )
+    print_assignment_dynamics(
+        name="Run2",
+        run_dir=run_2,
+        labels=y,
+    )
 
 
 def parse_args():
@@ -372,13 +587,14 @@ def latest_run(experiment_name):
 def main():
     args = parse_args()
     base_run = args.base_run or latest_run("condtc_qd_pre15_base_main")
-    ema_unweight_run = args.weighted_run or latest_run("condtc_qd_pre15_ema05_noweight")
-    ema_weighted_run = args.weighted_run or latest_run("condtc_qd_pre15_ema05_weighted")
+    ema_unweight_run = args.weighted_run or latest_run("condtc_qd_late_s3_m07")
+    ema_weighted_run = args.weighted_run or latest_run("condtc_qd_late_s3_m09")
     print("base run:", base_run)
     print("ema unweight run:", ema_unweight_run)
     print("ema weighted run:", ema_weighted_run)
     analyze(base_run, ema_unweight_run, batch_size=args.batch_size)
     analyze(ema_unweight_run, ema_weighted_run, batch_size=args.batch_size)
+
 
 
 if __name__ == "__main__":
