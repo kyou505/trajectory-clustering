@@ -64,6 +64,13 @@ class TargetHistoryConfig:
     # false：EMA 启用后立即使用目标 minimum_weight
     # true：从 1.0 线性下降到目标 minimum_weight
     weight_warmup: bool = False
+    # original 或 protect_low_margin
+    weighting_strategy: str = "original"
+    # 0.5 表示以当前 epoch 的 margin 中位数划分高低
+    margin_quantile: float = 0.5
+    # 是否对高熵样本使用 EMA/current target 插值
+    entropy_target_mix_enabled: bool = False
+
 
 @dataclass(frozen=True)
 class ConDTCExperimentConfig:
@@ -182,6 +189,20 @@ def validate_experiment_config(config):
     if not 0.0 < config.target_history.minimum_weight <= 1.0:
         raise ValueError(
             "target_history.minimum_weight must be in (0, 1]"
+        )
+
+    if config.target_history.weighting_strategy not in {
+        "original",
+        "protect_low_margin",
+    }:
+        raise ValueError(
+            "target_history.weighting_strategy must be "
+            "'original' or 'protect_low_margin'"
+        )
+
+    if not 0.0 <= config.target_history.margin_quantile <= 1.0:
+        raise ValueError(
+            "target_history.margin_quantile must be in [0, 1]"
         )
 
     for name in (

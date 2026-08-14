@@ -18,6 +18,9 @@ from src.training.cluster_init import (
     CrossViewSoftTargetEMA
 )
 
+ENTROPY_QUANTILE = 0.7
+HIGH_ENTROPY_EMA_ALPHA = 0.5
+
 def get_device():
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -206,6 +209,9 @@ def train_condtc(
         target_ema_momentum=0.99,
         target_ema_weight_warmup=False,
         target_ema_minimum_weight=0.2,
+        target_ema_weighting_strategy="original",
+        target_ema_margin_quantile=0.5,
+        target_entropy_mix_enabled=False,
         output_dir=None,
         pretrain_checkpoint_path=None,
 ):
@@ -288,6 +294,8 @@ def train_condtc(
     target_ema = CrossViewSoftTargetEMA(
         momentum=target_ema_momentum,
         minimum_weight=target_ema_minimum_weight,
+        weighting_strategy=target_ema_weighting_strategy,
+        margin_quantile=target_ema_margin_quantile,
     )
     best_train_loss = float("inf")
     history = []
@@ -315,6 +323,11 @@ def train_condtc(
             float("nan"),
             dtype=current_targets["q1"].dtype,
         )
+        entropy = nan_values.clone()
+        entropy_threshold = torch.tensor(float("nan"), dtype=current_targets["q1"].dtype)
+        high_entropy_mask = torch.zeros(num_samples, dtype=torch.bool)
+        # EMA 启用前使用当前目标，历史目标占比为 0
+        target_mix_alpha = torch.zeros(num_samples, dtype=current_targets["q1"].dtype)
         ema_targets = {
             # EMA尚未初始化时，用当前分配占位
             "q1": current_targets["q1"],
@@ -326,6 +339,8 @@ def train_condtc(
             "raw_js_divergence": nan_values.clone(),
             "relative_stability": nan_values.clone(),
             "margin_confidence": nan_values.clone(),
+            "margin_threshold": torch.tensor(float("nan"), dtype=current_targets["q1"].dtype),
+            "high_margin_mask": torch.zeros(num_samples, dtype=torch.bool),
             "reliability": nan_values.clone(),
             "sample_weight": torch.ones(
                 num_samples,
@@ -352,13 +367,38 @@ def train_condtc(
                 q2=current_targets["q2"],
             )
             ema_initialized = True
-            train_p1 = ema_targets["p1"]
-            train_p2 = ema_targets["p2"]
-            reliability = ema_targets["reliability"]
-            if torch.isfinite(reliability).all():
-                train_sample_weight = effective_minimum_weight + (1.0 - effective_minimum_weight) * ema_targets["reliability"]
+            if target_entropy_mix_enabled:
+                current_consensus = 0.5 * (current_targets["q1"] + current_targets["q2"])
+                current_consensus = (current_consensus / current_consensus.sum(dim=1, keepdim=True)).clamp_min(1e-12)
+                # 当前软聚类分配熵
+                entropy = -(current_consensus * current_consensus.clamp_min(1e-12).log()).sum(dim=1)
+                # 当前 epoch 的高熵阈值
+                entropy_threshold = torch.quantile(entropy, ENTROPY_QUANTILE)
+                high_entropy_mask = entropy >= entropy_threshold
+                # 低熵样本完全使用 EMA target
+                target_mix_alpha = torch.ones_like(entropy)
+                # 高熵样本：EMA/current 各占一半
+                target_mix_alpha[high_entropy_mask] = HIGH_ENTROPY_EMA_ALPHA
+                alpha = target_mix_alpha.unsqueeze(1)
+                train_p1 = (1.0 - alpha) * current_targets["p1"] + alpha * ema_targets["p1"]
+                train_p2 = (1.0 - alpha) * current_targets["p2"] + alpha * ema_targets["p2"]
+                train_p1 = train_p1 / train_p1.sum(dim=1, keepdim=True).clamp_min(1e-12)
+                train_p2 = train_p2 / train_p2.sum(dim=1, keepdim=True).clamp_min(1e-12)
             else:
+                train_p1 = ema_targets["p1"]
+                train_p2 = ema_targets["p2"]
+                target_mix_alpha = torch.ones(
+                    num_samples,
+                    dtype=current_targets["q1"].dtype,
+                )
+            if target_entropy_mix_enabled:
                 train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
+            else:
+                reliability = ema_targets["reliability"]
+                if torch.isfinite(reliability).all():
+                    train_sample_weight = effective_minimum_weight + (1.0 - effective_minimum_weight) * ema_targets["reliability"]
+                else:
+                    train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
             ema_targets["sample_weight"] = train_sample_weight.clone()
         train_metrics = train_one_epoch(
             model=model,
@@ -389,6 +429,8 @@ def train_condtc(
                 "ema_q2": ema_targets["q2"],
                 "p1": ema_targets["p1"],
                 "p2": ema_targets["p2"],
+                "train_p1": train_p1,
+                "train_p2": train_p2,
                 "ema_enabled": ema_enabled,
                 "ema_initialized": ema_initialized,
                 "raw_js_view1": ema_targets["raw_js_view1"],
@@ -396,6 +438,12 @@ def train_condtc(
                 "raw_js_divergence": ema_targets["raw_js_divergence"],
                 "relative_stability": ema_targets["relative_stability"],
                 "margin_confidence": ema_targets["margin_confidence"],
+                "margin_threshold": ema_targets["margin_threshold"],
+                "high_margin_mask": ema_targets["high_margin_mask"],
+                "entropy": entropy,
+                "entropy_threshold": entropy_threshold,
+                "high_entropy_mask": high_entropy_mask,
+                "target_mix_alpha": target_mix_alpha,
                 "reliability": ema_targets["reliability"],
                 "sample_weight": ema_targets["sample_weight"],
                 "effective_minimum_weight": effective_minimum_weight,

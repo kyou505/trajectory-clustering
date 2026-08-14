@@ -174,7 +174,13 @@ def compute_global_target_distribution(
     return global_q, global_p
 
 class CrossViewSoftTargetEMA:
-    def __init__(self, momentum, minimum_weight=0.2):
+    def __init__(
+            self,
+            momentum,
+            minimum_weight=0.2,
+            weighting_strategy="original",
+            margin_quantile=0.5,
+    ):
         if not 0.0 <= momentum < 1.0:
             raise ValueError("momentum must be in [0, 1)")
         if not 0.0 < minimum_weight <= 1.0:
@@ -182,6 +188,8 @@ class CrossViewSoftTargetEMA:
         self.momentum = momentum
         # minimum_weight=1.0 时全体样本权重恒为 1，数学上等价于关闭加权
         self.minimum_weight = minimum_weight
+        self.weighting_strategy = weighting_strategy
+        self.margin_quantile = margin_quantile
         self.ema_q1 = None
         self.ema_q2 = None
 
@@ -205,6 +213,8 @@ class CrossViewSoftTargetEMA:
             relative_stability = nan_values.clone()
             reliability = nan_values.clone()
             sample_weight = torch.ones(num_samples, dtype=q1.dtype)
+            margin_threshold = torch.tensor(float("nan"), dtype=q1.dtype)
+            high_margin_mask = torch.zeros(num_samples, dtype=torch.bool)
 
             self.ema_q1 = q1.clone()
             self.ema_q2 = q2.clone()
@@ -222,9 +232,13 @@ class CrossViewSoftTargetEMA:
                 relative_stability=relative_stability,
                 margin_confidence=margin_confidence,
                 minimum_weight=self.minimum_weight,
+                weighting_strategy=self.weighting_strategy,
+                margin_quantile=self.margin_quantile,
             )
             reliability = reliability_output["reliability"]
             sample_weight = reliability_output["sample_weight"]
+            margin_threshold = reliability_output["margin_threshold"]
+            high_margin_mask = reliability_output["high_margin_mask"]
             # 更新EMA
             self.ema_q1.mul_(self.momentum).add_(q1, alpha=1 - self.momentum)
             self.ema_q2.mul_(self.momentum).add_(q2, alpha=1 - self.momentum)
@@ -243,6 +257,8 @@ class CrossViewSoftTargetEMA:
             "margin_confidence": margin_confidence,
             "reliability": reliability,
             "sample_weight": sample_weight,
+            "margin_threshold": margin_threshold,
+            "high_margin_mask": high_margin_mask,
         }
 
     def state_dict(self):
@@ -337,18 +353,42 @@ def compute_reliability_weight(
         relative_stability,
         margin_confidence,
         minimum_weight=0.2,
+        weighting_strategy="original",
+        margin_quantile=0.5,
 ):
-    """
-    将时间稳定性和决策置信度转化为逐轨迹训练权重。
-    :return:
-        reliability: 原始综合可信度，形状 [N]，范围 [0, 1]。
-        sample_weight: 带下限的训练权重，形状 [N]，范围 [minimum_weight, 1]。
-    """
-    reliability = (relative_stability * margin_confidence).clamp(min=0.0, max=1.0)
-    sample_weight = minimum_weight + (1 - minimum_weight) * reliability
+
+    if weighting_strategy == "original":
+        # 原始策略：稳定性 × margin
+        reliability = (relative_stability * margin_confidence).clamp(min=0.0, max=1.0)
+        margin_threshold = torch.tensor(
+            float("nan"),
+            dtype=margin_confidence.dtype,
+            device=margin_confidence.device,
+        )
+        high_margin_mask = torch.zeros_like(
+            margin_confidence,
+            dtype=torch.bool,
+        )
+    elif weighting_strategy == "protect_low_margin":
+        # 当前 epoch 的 margin 中位数
+        margin_threshold = torch.quantile(
+            margin_confidence,
+            margin_quantile,
+        )
+        high_margin_mask = margin_confidence >= margin_threshold
+        # 低 margin 边界样本可靠性设为 1，不进行降权
+        reliability = torch.ones_like(relative_stability)
+        # 只有高 margin 样本才根据稳定性决定权重
+        reliability[high_margin_mask] = relative_stability[high_margin_mask]
+        reliability = reliability.clamp(0.0, 1.0)
+    else:
+        raise ValueError("unknown weighting_strategy")
+    sample_weight = minimum_weight + (1.0 - minimum_weight) * reliability
     return {
         "reliability": reliability,
         "sample_weight": sample_weight,
+        "margin_threshold": margin_threshold,
+        "high_margin_mask": high_margin_mask,
     }
 
 def test():

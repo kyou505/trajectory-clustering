@@ -133,6 +133,9 @@ def main():
                 target_ema_momentum=config.target_history.momentum,
                 target_ema_start_epoch=config.target_history.start_epoch,
                 target_ema_minimum_weight=config.target_history.minimum_weight,
+                target_ema_weighting_strategy=config.target_history.weighting_strategy,
+                target_ema_margin_quantile=config.target_history.margin_quantile,
+                target_entropy_mix_enabled=config.target_history.entropy_target_mix_enabled
             )
 
             print("evaluating:", checkpoint_path)
