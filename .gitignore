@@ -18,6 +18,7 @@ env/
 ENV/
 .env
 .env.*
+runs/
 
 # Testing and coverage
 .pytest_cache/
