@@ -18,7 +18,12 @@ env/
 ENV/
 .env
 .env.*
-runs/
+# Keep lightweight experiment records in Git, but ignore binary artifacts.
+con-dtc/runs/**
+!con-dtc/runs/**/
+!con-dtc/runs/**/config.yaml
+!con-dtc/runs/**/metrics.json
+!con-dtc/runs/**/train.log
 
 # Testing and coverage
 .pytest_cache/
