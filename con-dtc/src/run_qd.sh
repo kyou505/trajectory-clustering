@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
-# 用法: bash src/run_qd.sh [config路径]
-#   config 默认 configs/condtc_qd_paper_crossview.yaml
-#   PYTHON_BIN 环境变量可指定解释器（默认 python，服务器上传
-#   PYTHON_BIN=/root/miniconda3/bin/python）
+# 用法: bash src/run_qd.sh <config路径>
+# 必须显式指定实验 YAML 配置
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -11,7 +9,13 @@ GPU_ID="${GPU_ID:-0}"
 
 cd "$PROJECT_DIR"
 
-CONFIG_PATH="${1:-configs/condtc_qd_paper_crossview.yaml}"
+if [[ $# -ne 1 ]]; then
+    echo "用法: bash src/run_qd.sh <config路径>"
+    echo "示例: bash src/run_qd.sh configs/baseline/condtc_qd_baseline_pre15.yaml"
+    exit 1
+fi
+
+CONFIG_PATH="$1"
 LOG_DIR="logs"
 TIMESTAMP="$(date '+%Y%m%d_%H%M%S')"
 LOG_PATH="${LOG_DIR}/$(basename "$CONFIG_PATH" .yaml)_${TIMESTAMP}.log"

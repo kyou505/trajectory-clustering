@@ -205,12 +205,12 @@ def train_condtc(
         max_initialization_batches=None,
         max_train_batches=None,
         log_interval=50,
+        target_ema_enabled=False,
         target_ema_start_epoch=1,
         target_ema_momentum=0.99,
         target_ema_weight_warmup=False,
-        target_ema_minimum_weight=0.2,
-        target_ema_weighting_strategy="original",
-        target_ema_margin_quantile=0.5,
+        target_ema_minimum_weight=None,
+        target_ema_weighting_signal="stability",
         target_entropy_mix_enabled=False,
         output_dir=None,
         pretrain_checkpoint_path=None,
@@ -243,7 +243,7 @@ def train_condtc(
     target_history_dir.mkdir(parents=True, exist_ok=True)
     dataset = QDTrajectoryDataset()
     model = ContrastiveTrajectoryModel(num_clusters=num_clusters).to(device)
-    pretrain_metadata = model.load_pretrained_components(
+    model.load_pretrained_components(
         pretrain_checkpoint_path,
         map_location=device,
     )
@@ -293,22 +293,33 @@ def train_condtc(
     )
     target_ema = CrossViewSoftTargetEMA(
         momentum=target_ema_momentum,
-        minimum_weight=target_ema_minimum_weight,
-        weighting_strategy=target_ema_weighting_strategy,
-        margin_quantile=target_ema_margin_quantile,
+        minimum_weight=(
+            target_ema_minimum_weight
+            if target_ema_minimum_weight is not None
+            else 1.0
+        ),
+        weighting_signal=target_ema_weighting_signal
     )
     best_train_loss = float("inf")
     history = []
     for epoch in range(1, num_epochs + 1):
         print(f"epoch={epoch} / num_epochs={num_epochs}")
-        ema_enabled = epoch >= target_ema_start_epoch
-        effective_minimum_weight = compute_effective_minimum_weight(
-            epoch=epoch,
-            start_epoch=target_ema_start_epoch,
-            num_epochs=num_epochs,
-            target_minimum_weight=target_ema_minimum_weight,
-            use_warmup=target_ema_weight_warmup,
-        )
+        # 是否开启ema，target_ema_start_epoch控制开启的时机，默认直接开始，可分阶段开始
+        ema_enabled = target_ema_enabled and epoch >= target_ema_start_epoch
+        # 是否进行DEC加权effective_minimum_weight
+        sample_weighting_enabled = target_ema_minimum_weight is not None
+        # 是否启用线性权重 warm-up
+        warmup_enabled = target_ema_weight_warmup
+        if sample_weighting_enabled:
+            effective_minimum_weight = compute_effective_minimum_weight(
+                epoch=epoch,
+                start_epoch=target_ema_start_epoch,
+                num_epochs=num_epochs,
+                target_minimum_weight=target_ema_minimum_weight,
+                use_warmup=warmup_enabled,
+            )
+        else:
+            effective_minimum_weight = 1.0
         # 固定本 epoch 的两个增强视图
         train_loader.dataset.set_epoch(epoch)
         current_targets = compute_global_cross_view_targets(
@@ -339,8 +350,6 @@ def train_condtc(
             "raw_js_divergence": nan_values.clone(),
             "relative_stability": nan_values.clone(),
             "margin_confidence": nan_values.clone(),
-            "margin_threshold": torch.tensor(float("nan"), dtype=current_targets["q1"].dtype),
-            "high_margin_mask": torch.zeros(num_samples, dtype=torch.bool),
             "reliability": nan_values.clone(),
             "sample_weight": torch.ones(
                 num_samples,
@@ -348,13 +357,14 @@ def train_condtc(
             ),
         }
         ema_initialized = False
-        if epoch < target_ema_start_epoch:
+        if not ema_enabled:
+            # EMA未启用：baseline 或 分阶段启用EMA时未到达启用Epoch
+            # 此时不做历史混合，样本权重全为1 
             train_p1 = current_targets["p1"]
             train_p2 = current_targets["p2"]
-            train_sample_weight = torch.ones(
-                num_samples,
-                dtype=current_targets["q1"].dtype,
-            )
+            train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
+            # EMA 启用前的最后一个 epoch:用当前分配更新 EMA 历史，首次update只存储，不混合
+            # 这样 start_epoch 当轮就有历史可比对,EMA 平滑与稳定性加权立即生效
             if epoch == target_ema_start_epoch - 1:
                 target_ema.update(
                     q1=current_targets["q1"],
@@ -362,6 +372,7 @@ def train_condtc(
                 )
                 ema_initialized = True
         else:
+            # 更新EMA
             ema_targets=target_ema.update(
                 q1=current_targets["q1"],
                 q2=current_targets["q2"],
@@ -391,7 +402,10 @@ def train_condtc(
                     num_samples,
                     dtype=current_targets["q1"].dtype,
                 )
-            if target_entropy_mix_enabled:
+
+            if not sample_weighting_enabled:
+                train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
+            elif target_entropy_mix_enabled:
                 train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
             else:
                 reliability = ema_targets["reliability"]
@@ -400,6 +414,7 @@ def train_condtc(
                 else:
                     train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
             ema_targets["sample_weight"] = train_sample_weight.clone()
+        
         train_metrics = train_one_epoch(
             model=model,
             loader=train_loader,
@@ -412,6 +427,7 @@ def train_condtc(
             max_batches=max_train_batches,
             log_interval=log_interval,
         )
+        
         print(
             "Train: "
             f"loss={train_metrics['loss']:.4f} "
@@ -420,6 +436,7 @@ def train_condtc(
             f"cluster_nce={train_metrics['cluster_contrastive_loss']:.4f} "
             f"dec={train_metrics['clustering_loss']:.4f}"
         )
+        
         torch.save(
             {
                 "epoch": epoch,
@@ -438,8 +455,6 @@ def train_condtc(
                 "raw_js_divergence": ema_targets["raw_js_divergence"],
                 "relative_stability": ema_targets["relative_stability"],
                 "margin_confidence": ema_targets["margin_confidence"],
-                "margin_threshold": ema_targets["margin_threshold"],
-                "high_margin_mask": ema_targets["high_margin_mask"],
                 "entropy": entropy,
                 "entropy_threshold": entropy_threshold,
                 "high_entropy_mask": high_entropy_mask,

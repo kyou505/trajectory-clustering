@@ -109,6 +109,31 @@ def main():
             print("experiment initialized")
             print("run directory:", run_dir)
             print("config snapshot:", config_snapshot)
+            target_history = config.target_history
+            target_history_kwargs = {
+                "target_ema_enabled": False,
+            }
+            if target_history is not None:
+                target_history_kwargs = {
+                    "target_ema_enabled": True,
+                    "target_ema_weight_warmup": (
+                        target_history.weight_warmup
+                    ),
+                    "target_ema_momentum": (
+                        target_history.momentum
+                    ),
+                    "target_ema_start_epoch": (
+                        target_history.start_epoch
+                    ),
+                    # None 表示不启用 DEC 样本加权，等价于权重下限 1.0
+                    "target_ema_minimum_weight": target_history.minimum_weight,
+                    "target_ema_weighting_signal": (
+                        target_history.weighting_signal
+                    ),
+                    "target_entropy_mix_enabled": (
+                        target_history.entropy_target_mix_enabled
+                    ),
+                }
             model, history, checkpoint_path = train_condtc(
                 num_epochs=config.training.num_epochs,
                 batch_size=config.data.batch_size,
@@ -129,13 +154,7 @@ def main():
                 log_interval=config.training.log_interval,
                 output_dir=run_dir,
                 pretrain_checkpoint_path=config.checkpoint.pretrain_path,
-                target_ema_weight_warmup=config.target_history.weight_warmup,
-                target_ema_momentum=config.target_history.momentum,
-                target_ema_start_epoch=config.target_history.start_epoch,
-                target_ema_minimum_weight=config.target_history.minimum_weight,
-                target_ema_weighting_strategy=config.target_history.weighting_strategy,
-                target_ema_margin_quantile=config.target_history.margin_quantile,
-                target_entropy_mix_enabled=config.target_history.entropy_target_mix_enabled
+                **target_history_kwargs,
             )
 
             print("evaluating:", checkpoint_path)

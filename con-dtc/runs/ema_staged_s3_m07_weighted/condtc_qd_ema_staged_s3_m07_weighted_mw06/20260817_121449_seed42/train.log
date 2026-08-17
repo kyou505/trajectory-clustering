@@ -1,0 +1,71 @@
+experiment initialized
+run directory: /root/trajectory-clustering/con-dtc/runs/condtc_qd_ema_staged_s3_m07_weighted_mw06/20260817_121449_seed42
+config snapshot: /root/trajectory-clustering/con-dtc/runs/condtc_qd_ema_staged_s3_m07_weighted_mw06/20260817_121449_seed42/config.yaml
+device: cuda
+pretrain checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_paper_15ep.pt
+epoch=1 / num_epochs=6
+batch=0050 loss=1.2522 representation_loss=1.0175 clustering_loss=0.4694 instance_nce=3.5261 cluster_nce=2.3788 
+batch=0100 loss=1.1484 representation_loss=0.9354 clustering_loss=0.4259 instance_nce=3.5002 cluster_nce=2.3484 
+batch=0150 loss=1.2910 representation_loss=1.1073 clustering_loss=0.3676 instance_nce=3.5001 cluster_nce=2.3400 
+batch=0200 loss=1.1210 representation_loss=0.9007 clustering_loss=0.4407 instance_nce=3.4968 cluster_nce=2.3422 
+batch=0250 loss=1.1561 representation_loss=1.0058 clustering_loss=0.3007 instance_nce=3.4909 cluster_nce=2.3328 
+batch=0300 loss=1.2513 representation_loss=1.0743 clustering_loss=0.3540 instance_nce=3.4894 cluster_nce=2.3394 
+batch=0350 loss=1.1866 representation_loss=1.0231 clustering_loss=0.3270 instance_nce=3.4739 cluster_nce=2.3411 
+Train: loss=1.1424 mstm=0.9538 instance_nce=3.5081 cluster_nce=2.3467 dec=0.3772
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_qd_ema_staged_s3_m07_weighted_mw06/20260817_121449_seed42/checkpoints/condtc_best.pt
+epoch=2 / num_epochs=6
+batch=0050 loss=1.0601 representation_loss=0.9270 clustering_loss=0.2662 instance_nce=3.4772 cluster_nce=2.3288 
+batch=0100 loss=1.0675 representation_loss=0.9415 clustering_loss=0.2520 instance_nce=3.4701 cluster_nce=2.3227 
+batch=0150 loss=1.2057 representation_loss=1.0739 clustering_loss=0.2635 instance_nce=3.4802 cluster_nce=2.3232 
+batch=0200 loss=1.0010 representation_loss=0.8775 clustering_loss=0.2469 instance_nce=3.4659 cluster_nce=2.3335 
+batch=0250 loss=1.0316 representation_loss=0.9058 clustering_loss=0.2518 instance_nce=3.5169 cluster_nce=2.3357 
+batch=0300 loss=1.0958 representation_loss=0.9792 clustering_loss=0.2333 instance_nce=3.4917 cluster_nce=2.3403 
+batch=0350 loss=1.1383 representation_loss=1.0237 clustering_loss=0.2292 instance_nce=3.5074 cluster_nce=2.3250 
+Train: loss=1.0664 mstm=0.9354 instance_nce=3.4910 cluster_nce=2.3312 dec=0.2620
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_qd_ema_staged_s3_m07_weighted_mw06/20260817_121449_seed42/checkpoints/condtc_best.pt
+epoch=3 / num_epochs=6
+batch=0050 loss=1.1448 representation_loss=1.0308 clustering_loss=0.2280 instance_nce=3.4377 cluster_nce=2.3066 
+batch=0100 loss=0.9928 representation_loss=0.8839 clustering_loss=0.2177 instance_nce=3.4431 cluster_nce=2.3329 
+batch=0150 loss=0.9015 representation_loss=0.7877 clustering_loss=0.2276 instance_nce=3.4602 cluster_nce=2.3223 
+batch=0200 loss=1.0930 representation_loss=0.9771 clustering_loss=0.2318 instance_nce=3.4479 cluster_nce=2.3368 
+batch=0250 loss=1.0344 representation_loss=0.9145 clustering_loss=0.2398 instance_nce=3.4753 cluster_nce=2.3130 
+batch=0300 loss=1.0653 representation_loss=0.9522 clustering_loss=0.2263 instance_nce=3.4444 cluster_nce=2.3216 
+batch=0350 loss=1.0868 representation_loss=0.9731 clustering_loss=0.2275 instance_nce=3.5014 cluster_nce=2.3184 
+Train: loss=1.0435 mstm=0.9292 instance_nce=3.4773 cluster_nce=2.3250 dec=0.2286
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_qd_ema_staged_s3_m07_weighted_mw06/20260817_121449_seed42/checkpoints/condtc_best.pt
+epoch=4 / num_epochs=6
+batch=0050 loss=1.0164 representation_loss=0.9068 clustering_loss=0.2193 instance_nce=3.4532 cluster_nce=2.3189 
+batch=0100 loss=1.1235 representation_loss=1.0212 clustering_loss=0.2046 instance_nce=3.4289 cluster_nce=2.3232 
+batch=0150 loss=0.9482 representation_loss=0.8369 clustering_loss=0.2226 instance_nce=3.4577 cluster_nce=2.3096 
+batch=0200 loss=0.9746 representation_loss=0.8826 clustering_loss=0.1839 instance_nce=3.4525 cluster_nce=2.3323 
+batch=0250 loss=1.1157 representation_loss=1.0083 clustering_loss=0.2149 instance_nce=3.4513 cluster_nce=2.3252 
+batch=0300 loss=1.0438 representation_loss=0.9414 clustering_loss=0.2048 instance_nce=3.4536 cluster_nce=2.3128 
+batch=0350 loss=0.9503 representation_loss=0.8535 clustering_loss=0.1935 instance_nce=3.5282 cluster_nce=2.3191 
+Train: loss=1.0272 mstm=0.9216 instance_nce=3.4664 cluster_nce=2.3210 dec=0.2113
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_qd_ema_staged_s3_m07_weighted_mw06/20260817_121449_seed42/checkpoints/condtc_best.pt
+epoch=5 / num_epochs=6
+batch=0050 loss=1.1335 representation_loss=1.0214 clustering_loss=0.2243 instance_nce=3.4519 cluster_nce=2.3104 
+batch=0100 loss=0.9629 representation_loss=0.8715 clustering_loss=0.1827 instance_nce=3.5058 cluster_nce=2.3296 
+batch=0150 loss=1.0244 representation_loss=0.9170 clustering_loss=0.2149 instance_nce=3.4691 cluster_nce=2.3166 
+batch=0200 loss=0.9443 representation_loss=0.8560 clustering_loss=0.1766 instance_nce=3.4443 cluster_nce=2.3271 
+batch=0250 loss=0.8733 representation_loss=0.7859 clustering_loss=0.1748 instance_nce=3.4571 cluster_nce=2.3143 
+batch=0300 loss=1.1041 representation_loss=1.0038 clustering_loss=0.2006 instance_nce=3.4642 cluster_nce=2.3175 
+batch=0350 loss=1.0617 representation_loss=0.9604 clustering_loss=0.2025 instance_nce=3.4590 cluster_nce=2.3325 
+Train: loss=1.0161 mstm=0.9165 instance_nce=3.4563 cluster_nce=2.3186 dec=0.1991
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_qd_ema_staged_s3_m07_weighted_mw06/20260817_121449_seed42/checkpoints/condtc_best.pt
+epoch=6 / num_epochs=6
+batch=0050 loss=1.0418 representation_loss=0.9492 clustering_loss=0.1852 instance_nce=3.4847 cluster_nce=2.3181 
+batch=0100 loss=0.8955 representation_loss=0.8042 clustering_loss=0.1825 instance_nce=3.4285 cluster_nce=2.3263 
+batch=0150 loss=0.8990 representation_loss=0.8048 clustering_loss=0.1884 instance_nce=3.4114 cluster_nce=2.3079 
+batch=0200 loss=1.0291 representation_loss=0.9385 clustering_loss=0.1811 instance_nce=3.4662 cluster_nce=2.3322 
+batch=0250 loss=0.9642 representation_loss=0.8726 clustering_loss=0.1831 instance_nce=3.4468 cluster_nce=2.3107 
+batch=0300 loss=1.0025 representation_loss=0.9074 clustering_loss=0.1902 instance_nce=3.4366 cluster_nce=2.3108 
+batch=0350 loss=1.1880 representation_loss=1.0837 clustering_loss=0.2087 instance_nce=3.4333 cluster_nce=2.3104 
+Train: loss=0.9951 mstm=0.8988 instance_nce=3.4467 cluster_nce=2.3160 dec=0.1926
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_qd_ema_staged_s3_m07_weighted_mw06/20260817_121449_seed42/checkpoints/condtc_best.pt
+best train_loss:  0.9951087759922637
+evaluating: /root/trajectory-clustering/con-dtc/runs/condtc_qd_ema_staged_s3_m07_weighted_mw06/20260817_121449_seed42/checkpoints/condtc_best.pt
+device: cuda
+cluster counts: tensor([ 438,   20,  453,  935,  966,  944, 1000,  979, 1003, 1445, 1937, 1484])
+metrics: {'uacc': 0.7899862116511548, 'nmi': 0.887129020484019, 'ri': 0.9585869889525356, 'ari': 0.7571819696542187}
+metrics saved: /root/trajectory-clustering/con-dtc/runs/condtc_qd_ema_staged_s3_m07_weighted_mw06/20260817_121449_seed42/metrics.json

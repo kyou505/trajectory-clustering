@@ -55,21 +55,20 @@ class CheckpointConfig:
 
 @dataclass(frozen=True)
 class TargetHistoryConfig:
-    enabled: bool
-    start_epoch: int
     momentum: float
-    minimum_weight: float
-    save_interval: int
-    save_raw_assignments: bool
+
+    save_interval: int = 1
+    save_raw_assignments: bool = True
+    start_epoch: int = 1
     # false：EMA 启用后立即使用目标 minimum_weight
     # true：从 1.0 线性下降到目标 minimum_weight
     weight_warmup: bool = False
-    # original 或 protect_low_margin
-    weighting_strategy: str = "original"
-    # 0.5 表示以当前 epoch 的 margin 中位数划分高低
-    margin_quantile: float = 0.5
+    # 加权方式：stability / margin / stability_margin
+    weighting_signal: str = "stability"
     # 是否对高熵样本使用 EMA/current target 插值
     entropy_target_mix_enabled: bool = False
+    # 不设置表示不启用DEC样本加权
+    minimum_weight: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -79,9 +78,9 @@ class ConDTCExperimentConfig:
     model: ModelConfig
     loss: LossConfig
     optimizer: OptimizerConfig
-    target_history: TargetHistoryConfig
     training: TrainingConfig
     checkpoint: CheckpointConfig
+    target_history: Optional[TargetHistoryConfig] = None
 
 
 
@@ -99,20 +98,30 @@ def load_experiment_config(config_path):
     if not isinstance(raw_config, dict):
         raise ValueError("experiment config must be a mapping")
 
-    expected_sections = {
+    required_sections = {
         "experiment",
         "data",
         "model",
         "loss",
         "optimizer",
         "training",
-        "target_history",
         "checkpoint",
     }
 
+    optional_sections = {
+        "target_history",
+    }
+
     actual_sections = set(raw_config)
-    missing_sections = expected_sections - actual_sections
-    unknown_sections = actual_sections - expected_sections
+    missing_sections = required_sections - actual_sections
+    unknown_sections = actual_sections - required_sections - optional_sections
+
+    target_history_raw = raw_config.get("target_history")
+    target_history = (
+        TargetHistoryConfig(**target_history_raw)
+        if target_history_raw is not None
+        else None
+    )
 
     if missing_sections:
         raise ValueError(
@@ -134,13 +143,13 @@ def load_experiment_config(config_path):
         optimizer=OptimizerConfig(
             **raw_config["optimizer"]
         ),
-        target_history=TargetHistoryConfig(**raw_config["target_history"]),
         training=TrainingConfig(
             **raw_config["training"]
         ),
         checkpoint=CheckpointConfig(
             **raw_config["checkpoint"]
         ),
+        target_history=target_history,
     )
     validate_experiment_config(config)
     return config
@@ -186,24 +195,23 @@ def validate_experiment_config(config):
             "clustering_learning_rate must be positive"
         )
 
-    if not 0.0 < config.target_history.minimum_weight <= 1.0:
-        raise ValueError(
-            "target_history.minimum_weight must be in (0, 1]"
-        )
+    target_history = config.target_history
+    if target_history is not None:
+        if not (1 <= target_history.start_epoch <= config.training.num_epochs):
+            raise ValueError("target_history.start_epoch must be between 1 and training.num_epochs")
+        if target_history.minimum_weight is not None:
+            if not 0.0 < target_history.minimum_weight <= 1.0:
+                raise ValueError("target_history.minimum_weight must be in (0, 1]")
 
-    if config.target_history.weighting_strategy not in {
-        "original",
-        "protect_low_margin",
-    }:
-        raise ValueError(
-            "target_history.weighting_strategy must be "
-            "'original' or 'protect_low_margin'"
-        )
+        if target_history.weight_warmup and target_history.minimum_weight is None:
+            raise ValueError("weight_warmup requires minimum_weight")
 
-    if not 0.0 <= config.target_history.margin_quantile <= 1.0:
-        raise ValueError(
-            "target_history.margin_quantile must be in [0, 1]"
-        )
+        if target_history.weighting_signal not in {
+            "stability",
+            "margin",
+            "stability_margin",
+        }:
+            raise ValueError("invalid target_history.weighting_signal")
 
     for name in (
         "max_initialization_batches",
