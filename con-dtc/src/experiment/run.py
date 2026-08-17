@@ -136,6 +136,7 @@ def main():
                     "target_entropy_quantile": (
                         target_history.entropy_quantile
                     ),
+                    "target_entropy_upper_quantile": target_history.entropy_upper_quantile,
                     "target_high_entropy_ema_alpha": (
                         target_history.high_entropy_ema_alpha
                     ),

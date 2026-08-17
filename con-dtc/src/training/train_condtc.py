@@ -213,6 +213,7 @@ def train_condtc(
         # 基于软分配熵进行插值相关参数
         target_entropy_mix_enabled=False,
         target_entropy_quantile=0.7,
+        target_entropy_upper_quantile=None,
         target_high_entropy_ema_alpha=0.5,
         output_dir=None,
         pretrain_checkpoint_path=None,
@@ -338,6 +339,7 @@ def train_condtc(
         )
         entropy = nan_values.clone()
         entropy_threshold = torch.tensor(float("nan"), dtype=current_targets["q1"].dtype)
+        entropy_upper_threshold = torch.tensor(float("nan"), dtype=current_targets["q1"].dtype)
         high_entropy_mask = torch.zeros(num_samples, dtype=torch.bool)
         # EMA 启用前使用当前目标，历史目标占比为 0
         target_mix_alpha = torch.zeros(num_samples, dtype=current_targets["q1"].dtype)
@@ -385,10 +387,12 @@ def train_condtc(
                 mix_output = compute_entropy_mix_alpha(
                     current_targets=current_targets,
                     entropy_quantile=target_entropy_quantile,
+                    entropy_upper_quantile=target_entropy_upper_quantile,
                     high_entropy_ema_alpha=target_high_entropy_ema_alpha,
                 )
                 entropy = mix_output["entropy"]
                 entropy_threshold = mix_output["entropy_threshold"]
+                entropy_upper_threshold = mix_output["entropy_upper_threshold"]
                 high_entropy_mask = mix_output["high_entropy_mask"]
                 target_mix_alpha = mix_output["target_mix_alpha"]
                 alpha = target_mix_alpha.unsqueeze(1)
@@ -460,6 +464,7 @@ def train_condtc(
                 "margin_confidence": ema_targets["margin_confidence"],
                 "entropy": entropy,
                 "entropy_threshold": entropy_threshold,
+                "entropy_upper_threshold": entropy_upper_threshold,
                 "high_entropy_mask": high_entropy_mask,
                 "target_mix_alpha": target_mix_alpha,
                 "reliability": ema_targets["reliability"],
@@ -526,25 +531,46 @@ def compute_effective_minimum_weight(
 # 根据当前软分配熵生成逐样本 EMA target 插值比例。
 @torch.no_grad()
 def compute_entropy_mix_alpha(
-    current_targets,
-    entropy_quantile, # 分位数
-    high_entropy_ema_alpha,
+        current_targets,
+        entropy_quantile, # 分位数
+        high_entropy_ema_alpha,
+        entropy_upper_quantile=None,
 ):
     # 两个视图的共识分布
     consensus = 0.5 * (current_targets["q1"] + current_targets["q2"])
-    consensus = (consensus / consensus.sum(dim=1, keepdim=True)).clamp_min(1e-12)
+    consensus = consensus / consensus.sum(
+        dim=1,
+        keepdim=True,
+    ).clamp_min(1e-12)
     # 当前软聚类分配熵
-    entropy = -(consensus * consensus.log()).sum(dim=1)
+    entropy = -(
+            consensus * consensus.clamp_min(1e-12).log()
+    ).sum(dim=1)
     # 当前 epoch 的高熵阈值
     entropy_threshold = torch.quantile(entropy, entropy_quantile)
     high_entropy_mask = entropy >= entropy_threshold
-    # 低熵样本完全使用 EMA target；高熵样本混入当前目标
-    target_mix_alpha = torch.ones_like(entropy)
-    target_mix_alpha[high_entropy_mask] = high_entropy_ema_alpha
+
+    if entropy_upper_quantile is None:
+        # 现有硬阈值：
+        # 低熵样本完全使用 EMA target；高熵样本混入当前目标
+        target_mix_alpha = torch.ones_like(entropy)
+        target_mix_alpha[high_entropy_mask] = high_entropy_ema_alpha
+        entropy_upper_threshold = torch.tensor(float("nan"), dtype=entropy.dtype, device=entropy.device)
+    else:
+        # 连续插值：
+        # P70以下alpha=1；
+        # P70～P90从1线性下降到最小EMA比例；
+        # P90以上保持最小EMA比例。
+        entropy_upper_threshold = torch.quantile(entropy, entropy_upper_quantile)
+        transition_width = (entropy_upper_threshold - entropy_threshold).clamp_min(1e-12)
+        transition_progress = ((entropy - entropy_threshold) / transition_width).clamp(0.0, 1.0)
+        target_mix_alpha = 1.0 - (1.0 - high_entropy_ema_alpha) * transition_progress
+
     return {
         "target_mix_alpha": target_mix_alpha,
         "entropy": entropy,
         "entropy_threshold": entropy_threshold,
+        "entropy_upper_threshold": entropy_upper_threshold,
         "high_entropy_mask": high_entropy_mask,
     }
 

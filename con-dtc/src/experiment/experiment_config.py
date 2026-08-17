@@ -69,6 +69,8 @@ class TargetHistoryConfig:
     entropy_target_mix_enabled: bool = False
     # 使用当前 epoch 熵分布的分位点划分高熵样本
     entropy_quantile: float = 0.7
+    # 连续插值：在entropy_quantile到该分位点之间连续降低EMA比例。为None时直接使用硬阈值
+    entropy_upper_quantile: Optional[float] = None
     # 高熵样本目标中 EMA target 的占比
     high_entropy_ema_alpha: float = 0.5
     # 不设置表示不启用DEC样本加权
@@ -234,6 +236,11 @@ def validate_experiment_config(config):
             "stability_margin",
         }:
             raise ValueError("invalid target_history.weighting_signal")
+
+        upper_quantile = target_history.entropy_upper_quantile
+        if upper_quantile is not None:
+            if not target_history.entropy_quantile < upper_quantile <= 1.0:
+                raise ValueError("target_history.entropy_upper_quantile must be greater than entropy_quantile and no greater than 1")
 
     for name in (
         "max_initialization_batches",
