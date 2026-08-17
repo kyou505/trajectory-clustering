@@ -133,6 +133,12 @@ def main():
                     "target_entropy_mix_enabled": (
                         target_history.entropy_target_mix_enabled
                     ),
+                    "target_entropy_quantile": (
+                        target_history.entropy_quantile
+                    ),
+                    "target_high_entropy_ema_alpha": (
+                        target_history.high_entropy_ema_alpha
+                    ),
                 }
             model, history, checkpoint_path = train_condtc(
                 num_epochs=config.training.num_epochs,

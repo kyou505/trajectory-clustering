@@ -18,9 +18,6 @@ from src.training.cluster_init import (
     CrossViewSoftTargetEMA
 )
 
-ENTROPY_QUANTILE = 0.7
-HIGH_ENTROPY_EMA_ALPHA = 0.5
-
 def get_device():
     return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -205,13 +202,18 @@ def train_condtc(
         max_initialization_batches=None,
         max_train_batches=None,
         log_interval=50,
+        # 基础EMA
         target_ema_enabled=False,
-        target_ema_start_epoch=1,
+        target_ema_start_epoch=1, # 分阶段开启
         target_ema_momentum=0.99,
-        target_ema_weight_warmup=False,
+        # DEC加权相关
+        target_ema_weight_warmup=False, # 线性加权
         target_ema_minimum_weight=None,
         target_ema_weighting_signal="stability",
+        # 基于软分配熵进行插值相关参数
         target_entropy_mix_enabled=False,
+        target_entropy_quantile=0.7,
+        target_high_entropy_ema_alpha=0.5,
         output_dir=None,
         pretrain_checkpoint_path=None,
 ):
@@ -379,17 +381,16 @@ def train_condtc(
             )
             ema_initialized = True
             if target_entropy_mix_enabled:
-                current_consensus = 0.5 * (current_targets["q1"] + current_targets["q2"])
-                current_consensus = (current_consensus / current_consensus.sum(dim=1, keepdim=True)).clamp_min(1e-12)
-                # 当前软聚类分配熵
-                entropy = -(current_consensus * current_consensus.clamp_min(1e-12).log()).sum(dim=1)
-                # 当前 epoch 的高熵阈值
-                entropy_threshold = torch.quantile(entropy, ENTROPY_QUANTILE)
-                high_entropy_mask = entropy >= entropy_threshold
-                # 低熵样本完全使用 EMA target
-                target_mix_alpha = torch.ones_like(entropy)
-                # 高熵样本：EMA/current 各占一半
-                target_mix_alpha[high_entropy_mask] = HIGH_ENTROPY_EMA_ALPHA
+                # 基于软分配熵的目标插值方法
+                mix_output = compute_entropy_mix_alpha(
+                    current_targets=current_targets,
+                    entropy_quantile=target_entropy_quantile,
+                    high_entropy_ema_alpha=target_high_entropy_ema_alpha,
+                )
+                entropy = mix_output["entropy"]
+                entropy_threshold = mix_output["entropy_threshold"]
+                high_entropy_mask = mix_output["high_entropy_mask"]
+                target_mix_alpha = mix_output["target_mix_alpha"]
                 alpha = target_mix_alpha.unsqueeze(1)
                 train_p1 = (1.0 - alpha) * current_targets["p1"] + alpha * ema_targets["p1"]
                 train_p2 = (1.0 - alpha) * current_targets["p2"] + alpha * ema_targets["p2"]
@@ -403,16 +404,18 @@ def train_condtc(
                     dtype=current_targets["q1"].dtype,
                 )
 
-            if not sample_weighting_enabled:
-                train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
-            elif target_entropy_mix_enabled:
-                train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
+            reliability = ema_targets["reliability"]
+            # 是否开启DEC加权
+            use_reliability_weighting = (
+                sample_weighting_enabled
+                and not target_entropy_mix_enabled # 插值时不加权
+                and torch.isfinite(reliability).all()
+            )
+            if use_reliability_weighting:
+                # 加权后权重
+                train_sample_weight = effective_minimum_weight + (1.0 - effective_minimum_weight) * reliability
             else:
-                reliability = ema_targets["reliability"]
-                if torch.isfinite(reliability).all():
-                    train_sample_weight = effective_minimum_weight + (1.0 - effective_minimum_weight) * ema_targets["reliability"]
-                else:
-                    train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
+                train_sample_weight = torch.ones(num_samples, dtype=current_targets["q1"].dtype)
             ema_targets["sample_weight"] = train_sample_weight.clone()
         
         train_metrics = train_one_epoch(
@@ -520,6 +523,30 @@ def compute_effective_minimum_weight(
     # 从 1.0 线性下降到 target_minimum_weight
     return 1.0 - progress * (1.0 - target_minimum_weight)
 
+# 根据当前软分配熵生成逐样本 EMA target 插值比例。
+@torch.no_grad()
+def compute_entropy_mix_alpha(
+    current_targets,
+    entropy_quantile, # 分位数
+    high_entropy_ema_alpha,
+):
+    # 两个视图的共识分布
+    consensus = 0.5 * (current_targets["q1"] + current_targets["q2"])
+    consensus = (consensus / consensus.sum(dim=1, keepdim=True)).clamp_min(1e-12)
+    # 当前软聚类分配熵
+    entropy = -(consensus * consensus.log()).sum(dim=1)
+    # 当前 epoch 的高熵阈值
+    entropy_threshold = torch.quantile(entropy, entropy_quantile)
+    high_entropy_mask = entropy >= entropy_threshold
+    # 低熵样本完全使用 EMA target；高熵样本混入当前目标
+    target_mix_alpha = torch.ones_like(entropy)
+    target_mix_alpha[high_entropy_mask] = high_entropy_ema_alpha
+    return {
+        "target_mix_alpha": target_mix_alpha,
+        "entropy": entropy,
+        "entropy_threshold": entropy_threshold,
+        "high_entropy_mask": high_entropy_mask,
+    }
 
 if __name__ == "__main__":
     train_condtc(

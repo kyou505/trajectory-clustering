@@ -67,6 +67,10 @@ class TargetHistoryConfig:
     weighting_signal: str = "stability"
     # 是否对高熵样本使用 EMA/current target 插值
     entropy_target_mix_enabled: bool = False
+    # 使用当前 epoch 熵分布的分位点划分高熵样本
+    entropy_quantile: float = 0.7
+    # 高熵样本目标中 EMA target 的占比
+    high_entropy_ema_alpha: float = 0.5
     # 不设置表示不启用DEC样本加权
     minimum_weight: Optional[float] = None
 
@@ -205,6 +209,24 @@ def validate_experiment_config(config):
 
         if target_history.weight_warmup and target_history.minimum_weight is None:
             raise ValueError("weight_warmup requires minimum_weight")
+
+        if not 0.0 < target_history.entropy_quantile < 1.0:
+            raise ValueError(
+                "target_history.entropy_quantile must be in (0, 1)"
+            )
+
+        if not 0.0 <= target_history.high_entropy_ema_alpha <= 1.0:
+            raise ValueError(
+                "target_history.high_entropy_ema_alpha must be in [0, 1]"
+            )
+
+        if (
+            target_history.entropy_target_mix_enabled
+            and target_history.minimum_weight is not None
+        ):
+            raise ValueError(
+                "entropy target mix cannot be combined with DEC sample weighting"
+            )
 
         if target_history.weighting_signal not in {
             "stability",

@@ -1,0 +1,124 @@
+# Con-DTC 青岛数据集“论文跨视图目标分布”实验配置
+#
+# 参数取值优先级：
+#   1. 论文中明确说明的参数，以论文为准。
+#   2. 论文未说明的参数，以作者公开的青岛实验脚本
+#      run_qd.sh（commit 1f92880d...）为准。
+#   3. 论文和源码均未说明、但当前实现必须提供的运行参数，标记为“实现设置”。
+#
+# 本配置对应的聚类目标：
+#   - 按照论文公式（16）—（18）实现跨视图监督。
+#   - 由增强视图 Q1 计算全局目标分布 P1，由增强视图 Q2 计算 P2。
+#   - 优化 0.5 * [KL(P2 || Q1) + KL(P1 || Q2)]。
+#   - 不使用作者源码中由未增强轨迹计算单个全局 P 的做法。
+#
+# 以下参数固定在当前 Python 模型实现中，不能通过本 YAML 修改：
+#   - d_model = 256：论文明确给出。
+#   - num_heads = 2：论文未说明，采用源码 run2.py 的默认值。
+#   - num_layers = 2：论文未说明，采用源码 run2.py 的默认值。
+#   - Transformer/前馈网络 dropout = 0.1：论文未说明，采用源码/模型默认值。
+#   - MSTM 掩码比例 = 0.15：论文明确给出。
+#   - 训练增强的轨迹丢点率 = 0.1：论文未给出具体值，采用源码
+#     run2.py 中 --droprate 的默认值。
+#   - 时间偏移 = 1—2 个分钟槽：论文给出的范围为 (0, 120) 秒；
+#     当前离散时间实现使用 1 或 2 个分钟槽进行近似，并非连续采样。
+#   - 动量编码器关闭：论文没有定义该模块；公开青岛脚本设置
+#     --momentum 0，当前复现实现也没有使用动量编码器。
+
+experiment:
+  # 实现设置：实验名称；用于和此前使用单个目标分布 P 的实验区分。
+  name: condtc_qd_ema_staged_s3_m07_entropy_p80_a050
+
+  # 实现设置：保存实验快照、日志和模型的根目录。
+  output_root: runs
+
+data:
+  # 源码设置：作者发布的青岛数据集目录名。
+  # 注意：当前发布文件包含 11604 条轨迹，而论文表 2 中写的是 12004 条；
+  # 汇报复现实验结果时应明确说明这一数据规模差异。
+  dataset: qdTimeNoise0424
+
+  # 论文第 6.3 节明确设置 batch size = 32。
+  batch_size: 32
+
+  # 实现设置：KMeans 初始化和计算全局 P1/P2 时使用的推理批大小；
+  # 只影响显存占用和计算速度，不改变损失函数定义。
+  initialization_batch_size: 256
+
+model:
+  # 论文第 6.1 节说明青岛数据有 12 个真实簇；
+  # 作者公开脚本也设置了 --wrongK 12。
+  num_clusters: 12
+
+loss:
+  # 论文公式（14）、（19）及图 5(c)：时间预测损失权重 alpha = 0.1。
+  time_loss_weight: 0.1
+
+  # 论文公式（18）、（19）及图 5(c)：聚类损失权重 beta = 0.5。
+  # 当前 ConDTCClusteringLoss 已在内部对两个跨视图 KL 项取 0.5 平均，
+  # 因此这里直接使用 beta，不再额外缩放。
+  clustering_loss_weight: 0.5
+
+  # 源码设置：exp2.py 的实例级 InfoNCE 温度为 0.5。
+  # 论文目标中没有这个额外投影头损失；配置结构要求保留该字段，
+  # 但其权重在下方设置为 0，因此该温度不会参与本实验。
+  instance_temperature: 0.5
+
+  # 源码设置：exp2.py 的簇级 InfoNCE 温度为 1.0。
+  # 本论文配方将对应损失权重设为 0，因此该值不会参与本实验。
+  cluster_temperature: 1.0
+
+  # 论文的聚类目标使用公式（18），不包含源码额外加入的实例级 InfoNCE，
+  # 因此关闭该损失。
+  instance_loss_weight: 0.0
+
+  # 论文没有包含源码额外加入的簇级投影头 InfoNCE，因此关闭该损失。
+  cluster_contrastive_loss_weight: 0.0
+
+optimizer:
+  # 论文第 6.3 节：STTraj2Vec 表示层微调学习率为 5e-5。
+  representation_learning_rate: 0.00005
+
+  # 论文第 6.3 节：聚类层学习率为 15e-5。
+  clustering_learning_rate: 0.00015
+
+  # 论文明确使用 AdamW，但没有给出 weight decay；
+  # PyTorch AdamW 和作者源码均采用默认值 0.01，因此按源码回退规则设置。
+  weight_decay: 0.01
+
+training:
+  # 论文没有报告准确的聚类训练轮数。公开青岛脚本为 --epoch 1，
+  # 论文图 7 显示聚类层在 6 个 epoch 内趋于稳定。实测 1 个 epoch
+  # 得 UACC 0.9660，为验证能否进一步收敛，按图 7 的稳定点取 6。
+  num_epochs: 6
+
+  # 论文没有报告随机种子，因此采用作者公开青岛脚本中的种子。
+  seed: 19721013
+
+  # 实现设置：每隔多少个 step 输出一次日志；不影响模型优化过程。
+  log_interval: 50
+
+  # 实现设置：null 表示使用全部批次；非 null 仅用于本地冒烟测试，
+  # 正式服务器实验必须保持为 null。
+  max_initialization_batches: null
+  max_train_batches: null
+
+target_history:
+  momentum: 0.7
+  start_epoch: 3
+  # 开启基于当前软聚类分配熵的 EMA/current target 插值。
+  entropy_target_mix_enabled: true
+  # P80：当前 epoch 中熵最高的约 20% 样本被判定为高熵样本。
+  entropy_quantile: 0.8
+  # 高熵样本使用 50% EMA target 和 50% 当前 target。
+  high_entropy_ema_alpha: 0.5
+
+checkpoint:
+  # 此路径应指向使用以下预训练配方生成的 checkpoint：
+  #   - alpha/time_loss_weight = 0.1：论文设置。
+  #   - AdamW 学习率 = 15e-5：论文第 6.3 节设置。
+  #   - batch size = 32：论文第 6.3 节设置。
+  #   - 训练集比例 = 0.8：论文未说明，采用公开脚本 --trainP 0.8。
+  #   - 预训练轮数 = 15
+  #   - 随机种子 = 19721013：论文未说明，采用公开脚本设置。
+  pretrain_path: checkpoints/sttraj2vec_pretrain_paper_15ep.pt

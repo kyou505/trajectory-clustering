@@ -27,7 +27,7 @@
 
 experiment:
   # 实现设置：实验名称；用于和此前使用单个目标分布 P 的实验区分。
-  name: condtc_qd_ema_staged_s3_m07_entropy_target_mix
+  name: condtc_qd_ema_staged_s3_m07_entropy_p70_a050
 
   # 实现设置：保存实验快照、日志和模型的根目录。
   output_root: runs
@@ -106,7 +106,12 @@ training:
 target_history:
   momentum: 0.7
   start_epoch: 3
+  # 开启基于当前软聚类分配熵的 EMA/current target 插值。
   entropy_target_mix_enabled: true
+  # P70：当前 epoch 中熵最高的约 30% 样本被判定为高熵样本。
+  entropy_quantile: 0.7
+  # 高熵样本使用 50% EMA target 和 50% 当前 target。
+  high_entropy_ema_alpha: 0.5
 
 checkpoint:
   # 此路径应指向使用以下预训练配方生成的 checkpoint：
