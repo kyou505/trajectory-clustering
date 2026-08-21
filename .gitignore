@@ -18,6 +18,7 @@ env/
 ENV/
 .env
 .env.*
+con-dtc/data/train.csv
 # Keep lightweight experiment records in Git, but ignore binary artifacts.
 con-dtc/runs/**
 !con-dtc/runs/**/
