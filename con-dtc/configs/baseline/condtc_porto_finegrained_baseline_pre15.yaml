@@ -1,0 +1,52 @@
+# Con-DTC Porto 细粒度加难数据集 baseline 配置
+#
+# 数据集按照论文 Algorithm 1 的公开描述生成，但作者没有公开所选的
+# 9 条基础轨迹、丢点率、时移量和速度倍率，因此不能视为作者原始 Porto 数据。
+
+experiment:
+  name: porto/baseline/condtc_porto_finegrained_baseline_pre15
+  output_root: runs
+
+data:
+  dataset: portoTimeNoiseFineGrained
+  # 论文第 6.3 节设置。
+  batch_size: 32
+  # 仅控制 KMeans 初始化及全局目标计算时的显存占用。
+  initialization_batch_size: 256
+
+model:
+  # 9 条基础路径，每条包含原始、时移、变速三个类别。
+  num_clusters: 27
+
+loss:
+  # 论文公式（14）、（19）及图 5(c) 的 alpha。
+  time_loss_weight: 0.1
+  # 论文公式（18）、（19）及图 5(c) 的 beta。
+  clustering_loss_weight: 0.5
+  # 以下温度在对应损失权重为 0 时不参与优化。
+  instance_temperature: 0.5
+  cluster_temperature: 1.0
+  # 论文聚类目标不包含当前实现额外提供的两个 InfoNCE 项。
+  instance_loss_weight: 0.0
+  cluster_contrastive_loss_weight: 0.0
+
+optimizer:
+  # 论文第 6.3 节：表示层微调学习率 5e-5。
+  representation_learning_rate: 0.00005
+  # 论文第 6.3 节：聚类层学习率 15e-5。
+  clustering_learning_rate: 0.00015
+  # AdamW 默认 weight decay。
+  weight_decay: 0.01
+
+training:
+  # 论文图 7 表明聚类在约 6 个 epoch 内稳定。
+  num_epochs: 6
+  # 重建实验使用固定种子；后续多种子实验只修改这一项。
+  seed: 42
+  log_interval: 50
+  max_initialization_batches: null
+  max_train_batches: null
+
+checkpoint:
+  # 必须先在同一个 Porto 数据集及其位置词表上完成预训练。
+  pretrain_path: checkpoints/sttraj2vec_porto_finegrained_pre15.pt

@@ -1,0 +1,135 @@
+experiment initialized
+run directory: /root/trajectory-clustering/con-dtc/runs/porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a025/20260821_110835_seed42
+config snapshot: /root/trajectory-clustering/con-dtc/runs/porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a025/20260821_110835_seed42/config.yaml
+device: cuda
+dataset: portoTimeNoiseFineGrained
+pretrain checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_porto_finegrained_pre15.pt
+epoch=1 / num_epochs=6
+batch=0050 loss=1.0030 representation_loss=0.7049 clustering_loss=0.5961 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.8711 representation_loss=0.6124 clustering_loss=0.5174 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.8907 representation_loss=0.6467 clustering_loss=0.4880 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.9374 representation_loss=0.7097 clustering_loss=0.4553 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.9777 representation_loss=0.7859 clustering_loss=0.3836 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.8629 representation_loss=0.6514 clustering_loss=0.4230 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.8423 representation_loss=0.6387 clustering_loss=0.4073 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.8425 representation_loss=0.6573 clustering_loss=0.3703 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.7787 representation_loss=0.5979 clustering_loss=0.3615 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.8804 representation_loss=0.7086 clustering_loss=0.3435 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.8606 representation_loss=0.6961 clustering_loss=0.3289 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.7876 representation_loss=0.6380 clustering_loss=0.2991 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.8843 representation_loss=0.7182 clustering_loss=0.3324 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.9374 representation_loss=0.7518 clustering_loss=0.3714 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.8607 representation_loss=0.6762 clustering_loss=0.3690 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.7913 representation_loss=0.6154 clustering_loss=0.3520 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.8536 representation_loss=0.7006 clustering_loss=0.3059 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.8873 mstm=0.6821 instance_nce=0.0000 cluster_nce=0.0000 dec=0.4105
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a025/20260821_110835_seed42/checkpoints/condtc_best.pt
+epoch=2 / num_epochs=6
+batch=0050 loss=0.7993 representation_loss=0.6133 clustering_loss=0.3721 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.7543 representation_loss=0.5887 clustering_loss=0.3311 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.8878 representation_loss=0.7167 clustering_loss=0.3423 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.8691 representation_loss=0.6992 clustering_loss=0.3399 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.8058 representation_loss=0.6457 clustering_loss=0.3201 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.8976 representation_loss=0.7295 clustering_loss=0.3362 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.8103 representation_loss=0.6449 clustering_loss=0.3309 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.7056 representation_loss=0.5457 clustering_loss=0.3197 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.9194 representation_loss=0.7678 clustering_loss=0.3033 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.8562 representation_loss=0.6955 clustering_loss=0.3213 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.8768 representation_loss=0.7371 clustering_loss=0.2795 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.9121 representation_loss=0.7638 clustering_loss=0.2966 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.9480 representation_loss=0.8095 clustering_loss=0.2770 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.8831 representation_loss=0.7360 clustering_loss=0.2942 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.8496 representation_loss=0.6960 clustering_loss=0.3073 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.9214 representation_loss=0.7775 clustering_loss=0.2879 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.9155 representation_loss=0.7615 clustering_loss=0.3081 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.8207 mstm=0.6634 instance_nce=0.0000 cluster_nce=0.0000 dec=0.3145
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a025/20260821_110835_seed42/checkpoints/condtc_best.pt
+epoch=3 / num_epochs=6
+batch=0050 loss=0.7871 representation_loss=0.6447 clustering_loss=0.2849 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.8375 representation_loss=0.6888 clustering_loss=0.2974 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.8022 representation_loss=0.6681 clustering_loss=0.2683 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.8774 representation_loss=0.7297 clustering_loss=0.2953 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.7375 representation_loss=0.6007 clustering_loss=0.2735 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.7678 representation_loss=0.6223 clustering_loss=0.2911 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.8236 representation_loss=0.6858 clustering_loss=0.2757 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.7395 representation_loss=0.5998 clustering_loss=0.2793 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.7729 representation_loss=0.6436 clustering_loss=0.2585 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.8182 representation_loss=0.6873 clustering_loss=0.2619 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.8096 representation_loss=0.6767 clustering_loss=0.2658 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.7836 representation_loss=0.6582 clustering_loss=0.2508 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.7494 representation_loss=0.6180 clustering_loss=0.2628 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.7994 representation_loss=0.6738 clustering_loss=0.2512 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.8180 representation_loss=0.6927 clustering_loss=0.2506 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.8220 representation_loss=0.6928 clustering_loss=0.2584 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.8041 representation_loss=0.6800 clustering_loss=0.2483 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.7876 mstm=0.6536 instance_nce=0.0000 cluster_nce=0.0000 dec=0.2682
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a025/20260821_110835_seed42/checkpoints/condtc_best.pt
+epoch=4 / num_epochs=6
+batch=0050 loss=0.8059 representation_loss=0.6731 clustering_loss=0.2656 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.7840 representation_loss=0.6601 clustering_loss=0.2478 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.8367 representation_loss=0.7107 clustering_loss=0.2518 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.7504 representation_loss=0.6192 clustering_loss=0.2624 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.7042 representation_loss=0.5712 clustering_loss=0.2661 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.7361 representation_loss=0.6162 clustering_loss=0.2398 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.8279 representation_loss=0.7072 clustering_loss=0.2413 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.6823 representation_loss=0.5659 clustering_loss=0.2328 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.8062 representation_loss=0.6909 clustering_loss=0.2306 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.7436 representation_loss=0.6237 clustering_loss=0.2398 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.7980 representation_loss=0.6776 clustering_loss=0.2408 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.7130 representation_loss=0.6050 clustering_loss=0.2159 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.7320 representation_loss=0.6110 clustering_loss=0.2420 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.7497 representation_loss=0.6432 clustering_loss=0.2130 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.8523 representation_loss=0.7371 clustering_loss=0.2302 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.7260 representation_loss=0.6068 clustering_loss=0.2382 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.7618 representation_loss=0.6489 clustering_loss=0.2258 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.7650 mstm=0.6439 instance_nce=0.0000 cluster_nce=0.0000 dec=0.2421
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a025/20260821_110835_seed42/checkpoints/condtc_best.pt
+epoch=5 / num_epochs=6
+batch=0050 loss=0.7738 representation_loss=0.6452 clustering_loss=0.2573 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.6910 representation_loss=0.5732 clustering_loss=0.2356 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.8510 representation_loss=0.7200 clustering_loss=0.2621 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.6891 representation_loss=0.5725 clustering_loss=0.2332 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.7531 representation_loss=0.6345 clustering_loss=0.2372 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.7991 representation_loss=0.6859 clustering_loss=0.2265 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.8005 representation_loss=0.6809 clustering_loss=0.2392 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.8016 representation_loss=0.6901 clustering_loss=0.2232 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.7055 representation_loss=0.5894 clustering_loss=0.2322 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.7633 representation_loss=0.6571 clustering_loss=0.2123 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.7003 representation_loss=0.5813 clustering_loss=0.2379 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.6516 representation_loss=0.5424 clustering_loss=0.2183 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.8180 representation_loss=0.7146 clustering_loss=0.2067 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.6870 representation_loss=0.5767 clustering_loss=0.2204 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.6285 representation_loss=0.5197 clustering_loss=0.2177 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.7209 representation_loss=0.6165 clustering_loss=0.2088 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.7355 representation_loss=0.6311 clustering_loss=0.2088 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.7412 mstm=0.6282 instance_nce=0.0000 cluster_nce=0.0000 dec=0.2260
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a025/20260821_110835_seed42/checkpoints/condtc_best.pt
+epoch=6 / num_epochs=6
+batch=0050 loss=0.6885 representation_loss=0.5713 clustering_loss=0.2343 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.7398 representation_loss=0.6329 clustering_loss=0.2137 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.6775 representation_loss=0.5586 clustering_loss=0.2377 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.7409 representation_loss=0.6318 clustering_loss=0.2181 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.7642 representation_loss=0.6611 clustering_loss=0.2061 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.8553 representation_loss=0.7506 clustering_loss=0.2094 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.7009 representation_loss=0.5861 clustering_loss=0.2296 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.6915 representation_loss=0.5817 clustering_loss=0.2196 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.7432 representation_loss=0.6436 clustering_loss=0.1992 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.7167 representation_loss=0.6110 clustering_loss=0.2114 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.7387 representation_loss=0.6317 clustering_loss=0.2141 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.7733 representation_loss=0.6694 clustering_loss=0.2078 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.7866 representation_loss=0.6733 clustering_loss=0.2267 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.7030 representation_loss=0.6012 clustering_loss=0.2037 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.7197 representation_loss=0.6148 clustering_loss=0.2098 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.7539 representation_loss=0.6507 clustering_loss=0.2065 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.7150 representation_loss=0.6124 clustering_loss=0.2053 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.7271 mstm=0.6199 instance_nce=0.0000 cluster_nce=0.0000 dec=0.2144
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a025/20260821_110835_seed42/checkpoints/condtc_best.pt
+best train_loss:  0.7271228752562336
+evaluating: /root/trajectory-clustering/con-dtc/runs/porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a025/20260821_110835_seed42/checkpoints/condtc_best.pt
+device: cuda
+dataset: portoTimeNoiseFineGrained
+cluster counts: tensor([ 994, 1088, 1720, 1311,  856,    0, 1259, 1871, 1366,  964, 1626, 1097,
+         921, 1006, 1017,  724, 1046, 1038, 1038,  914,  853,  345, 1100,  730,
+         356,  778, 1287])
+metrics: {'uacc': 0.846951107855704, 'nmi': 0.9170578379257974, 'ri': 0.9838735050816881, 'ari': 0.7894093117665548}
+metrics saved: /root/trajectory-clustering/con-dtc/runs/porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a025/20260821_110835_seed42/metrics.json
