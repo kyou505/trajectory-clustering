@@ -1,0 +1,106 @@
+{
+  "dataset_revision": 3,
+  "source": "/Users/jiangqi/Desktop/trajectory-clustering/con-dtc/data/train.csv",
+  "paper_aligned_reconstruction": true,
+  "seed": 42,
+  "num_base_trajectories": 9,
+  "base_trip_ids": [
+    "1393827644620000692",
+    "1388034538620000179",
+    "1376574516620000009",
+    "1392708307620000484",
+    "1373989168620000037",
+    "1387446664620000251",
+    "1376296559620000217",
+    "1401769440620000514",
+    "1379399187620000338"
+  ],
+  "num_clusters": 27,
+  "total_samples": 27305,
+  "base_selection": "shared_subpath",
+  "base_overlap": {
+    "same_origin_pair_ratio": 0.027777777777777776,
+    "shared_subpath_ratio": {
+      "min": 0.09523809523809523,
+      "mean": 0.24163288086230933,
+      "max": 0.6
+    }
+  },
+  "base_candidate_filters": {
+    "min_length": 45,
+    "max_length": 58,
+    "min_distinct_locations": 40
+  },
+  "cluster_size_range": {
+    "min": 900,
+    "max": 1100
+  },
+  "cluster_sizes": {
+    "0": 1041,
+    "1": 914,
+    "2": 1055,
+    "3": 1042,
+    "4": 921,
+    "5": 914,
+    "6": 937,
+    "7": 964,
+    "8": 1095,
+    "9": 1034,
+    "10": 1088,
+    "11": 937,
+    "12": 1080,
+    "13": 1046,
+    "14": 1084,
+    "15": 1000,
+    "16": 1038,
+    "17": 1011,
+    "18": 908,
+    "19": 1006,
+    "20": 963,
+    "21": 1079,
+    "22": 1097,
+    "23": 958,
+    "24": 1008,
+    "25": 1017,
+    "26": 1068
+  },
+  "temporal_modes": [
+    "original",
+    "time_shift",
+    "speed_scale"
+  ],
+  "dropout_rate": 0.1,
+  "paper_spatial_noise_meters": 50.0,
+  "effective_spatial_noise_meters": 1.0,
+  "time_noise_minutes": 3.0,
+  "time_shift_minutes": 10.0,
+  "speed_scale": 0.8,
+  "geohash_precision": 7,
+  "max_sequence_length": 60,
+  "location_vocab_size": 244,
+  "base_raw_location_count": 220,
+  "raw_location_count": 240,
+  "token_vocab_growth_ratio": 1.0909090909090908,
+  "trajectory_length": {
+    "min": 33,
+    "mean": 46.902545321369715,
+    "max": 57
+  },
+  "notes": {
+    "paper_specified": [
+      "9 base trajectories",
+      "3 temporal modes per base trajectory",
+      "50 meter Gaussian spatial noise",
+      "plus/minus 3 minute temporal noise",
+      "Geohash precision 7"
+    ],
+    "reconstruction_choices": [
+      "selected base trajectory IDs",
+      "effective spatial noise inferred from public QD token behavior",
+      "dropout rate",
+      "time shift",
+      "speed scale",
+      "cluster sizes"
+    ]
+  }
+}

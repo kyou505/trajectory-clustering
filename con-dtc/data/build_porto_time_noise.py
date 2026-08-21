@@ -3,6 +3,10 @@
 论文明确的设置：9 条基础轨迹、每条轨迹生成原始/时移/变速三类、
 50 米空间高斯噪声、正负 3 分钟时间噪声、Geohash-7。
 
+公开 QD 数据表明，保存坐标确实参与了 Geohash 编码，但空间扰动在 token
+层面远小于论文所称的 50 米：全数据只有 144 个位置 ID。因此默认使用 1 米
+的“有效空间噪声”重建公开数据行为，同时在元数据中保留论文声明的 50 米。
+
 论文未公开的基础轨迹、丢点率、时移量、速度倍率和簇大小由命令行参数
 显式控制，并写入 generation_config.json。因此该数据集属于论文方法的可复现
 重建，不等同于作者未公开的 Porto 实验数据。
@@ -13,7 +17,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 from pathlib import Path
 
 import numpy as np
@@ -40,23 +43,60 @@ def parse_args():
     parser.add_argument(
         "--output-dir",
         type=Path,
-        default=data_dir / "portoTimeNoiseReconstructed",
+        default=data_dir / "portoTimeNoiseFineGrained",
     )
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num-base-trajectories", type=int, default=9)
-    parser.add_argument("--total-samples", type=int, default=27009)
-    parser.add_argument("--min-base-length", type=int, default=30)
+    parser.add_argument("--min-cluster-size", type=int, default=900)
+    parser.add_argument("--max-cluster-size", type=int, default=1100)
+    # Porto 公开 q/d/o 数据的轨迹平均约 50 点；限制在这一长度区间，
+    # 既保留随机选取，又避免抽到大量明显偏短的基础轨迹。
+    parser.add_argument("--min-base-length", type=int, default=45)
     parser.add_argument("--max-base-length", type=int, default=58)
+    parser.add_argument(
+        "--min-base-distinct-locations",
+        type=int,
+        default=40,
+        help=(
+            "基础轨迹至少覆盖的不同 Geohash 数；用于排除长时间停留或 "
+            "空间覆盖不足的轨迹"
+        ),
+    )
     parser.add_argument("--candidate-pool-size", type=int, default=5000)
+    parser.add_argument(
+        "--base-selection",
+        choices=("random", "shared_subpath"),
+        default="shared_subpath",
+    )
+    parser.add_argument(
+        "--min-shared-subpath-ratio",
+        type=float,
+        default=0.25,
+        help="共享位置数 / 两条路线较短者位置数的下限",
+    )
+    parser.add_argument(
+        "--max-shared-subpath-ratio",
+        type=float,
+        default=0.75,
+        help="共享位置数 / 两条路线较短者位置数的上限，避免近重复路线",
+    )
     parser.add_argument("--dropout-rate", type=float, default=0.1)
-    parser.add_argument("--spatial-noise-meters", type=float, default=50.0)
+    parser.add_argument(
+        "--spatial-noise-meters",
+        type=float,
+        default=1.0,
+        help=(
+            "实际用于坐标的高斯噪声标准差；默认 1m 用于匹配公开 QD "
+            "数据中空间噪声基本不改变 Geohash token 的行为"
+        ),
+    )
     parser.add_argument("--time-noise-minutes", type=float, default=3.0)
-    parser.add_argument("--time-shift-minutes", type=float, default=60.0)
+    parser.add_argument("--time-shift-minutes", type=float, default=10.0)
     parser.add_argument(
         "--speed-scale",
         type=float,
-        default=0.5,
-        help="速度倍率；0.5 表示用时变为原来的 2 倍",
+        default=0.8,
+        help="速度倍率；0.8 表示用时变为原来的 1.25 倍",
     )
     parser.add_argument("--geohash-precision", type=int, default=7)
     parser.add_argument("--max-sequence-length", type=int, default=60)
@@ -92,7 +132,13 @@ def encode_geohash(longitude, latitude, precision=7):
     return "".join(result)
 
 
-def valid_porto_polyline(polyline, min_length, max_length):
+def valid_porto_polyline(
+        polyline,
+        min_length,
+        max_length,
+        min_distinct_locations,
+        geohash_precision,
+):
     if not min_length <= len(polyline) <= max_length:
         return False
     coordinates = np.asarray(polyline, dtype=np.float64)
@@ -100,11 +146,18 @@ def valid_porto_polyline(polyline, min_length, max_length):
         return False
     longitude = coordinates[:, 0]
     latitude = coordinates[:, 1]
-    return bool(
+    coordinates_valid = bool(
         np.isfinite(coordinates).all()
         and ((-8.75 <= longitude) & (longitude <= -8.50)).all()
         and ((41.05 <= latitude) & (latitude <= 41.25)).all()
     )
+    if not coordinates_valid:
+        return False
+    distinct_locations = {
+        encode_geohash(lon, lat, geohash_precision)
+        for lon, lat in coordinates
+    }
+    return len(distinct_locations) >= min_distinct_locations
 
 
 def collect_candidate_bases(
@@ -112,6 +165,8 @@ def collect_candidate_bases(
         pool_size,
         min_length,
         max_length,
+        min_distinct_locations,
+        geohash_precision,
         rng,
 ):
     """对合格轨迹做蓄水池采样，避免把 1.8 GB CSV 全部载入内存。"""
@@ -131,7 +186,13 @@ def collect_candidate_bases(
                 polyline = json.loads(row["POLYLINE"])
             except (TypeError, json.JSONDecodeError):
                 continue
-            if not valid_porto_polyline(polyline, min_length, max_length):
+            if not valid_porto_polyline(
+                polyline,
+                min_length,
+                max_length,
+                min_distinct_locations,
+                geohash_precision,
+            ):
                 continue
 
             candidate = {
@@ -157,37 +218,84 @@ def collect_candidate_bases(
     return candidates
 
 
-def resample_polyline(polyline, num_points=32):
-    """按累计路程重采样，用于比较不同长度的路线。"""
-    segment_lengths = np.linalg.norm(np.diff(polyline, axis=0), axis=1)
-    cumulative = np.concatenate(([0.0], np.cumsum(segment_lengths)))
-    if cumulative[-1] <= 0:
-        return np.repeat(polyline[:1], num_points, axis=0)
-    targets = np.linspace(0.0, cumulative[-1], num_points)
-    longitude = np.interp(targets, cumulative, polyline[:, 0])
-    latitude = np.interp(targets, cumulative, polyline[:, 1])
-    return np.column_stack((longitude, latitude))
-
-
-def select_diverse_bases(candidates, num_bases, rng):
-    """固定随机起点后用最远点采样选择空间路径不同的基础轨迹。"""
+def select_random_bases(candidates, num_bases, rng):
+    """按照论文描述，从合格候选轨迹中进行固定种子的随机选择。"""
     if len(candidates) < num_bases:
         raise ValueError("candidate pool is smaller than num-base-trajectories")
-    features = np.stack(
-        [resample_polyline(item["polyline"]).reshape(-1) for item in candidates]
-    )
-    # 经度按 Porto 纬度修正，使经纬方向近似处于同一距离尺度。
-    features[:, 0::2] *= math.cos(math.radians(41.15))
+    selected = rng.choice(len(candidates), size=num_bases, replace=False)
+    return [candidates[int(index)] for index in selected]
 
-    selected = [int(rng.integers(len(candidates)))]
-    minimum_distance = np.full(len(candidates), np.inf)
-    while len(selected) < num_bases:
-        last = features[selected[-1]]
-        distance = np.sqrt(np.mean((features - last) ** 2, axis=1))
-        minimum_distance = np.minimum(minimum_distance, distance)
-        minimum_distance[selected] = -1.0
-        selected.append(int(np.argmax(minimum_distance)))
-    return [candidates[index] for index in selected]
+
+def route_geohashes(candidate, precision):
+    return {
+        encode_geohash(lon, lat, precision)
+        for lon, lat in candidate["polyline"]
+    }
+
+
+def shared_subpath_ratio(left, right):
+    denominator = min(len(left), len(right))
+    return len(left & right) / denominator if denominator else 0.0
+
+
+def select_shared_subpath_bases(
+        candidates,
+        num_bases,
+        precision,
+        min_ratio,
+        max_ratio,
+        rng,
+):
+    """选择共享中等比例路径的位置轨迹。
+
+    共享段可以位于起点、中段或终点，不要求轨迹具有相同起点。先从候选池
+    随机抽取一组锚点进行搜索，再选择拥有最多中等重叠邻居的锚点。最终从
+    合格邻居中随机选择，避免恢复成“最相似轨迹”或“最远轨迹”采样。
+    """
+    if len(candidates) < num_bases:
+        raise ValueError("candidate pool is smaller than num-base-trajectories")
+
+    route_sets = [route_geohashes(item, precision) for item in candidates]
+    best_anchor = None
+    best_neighbors = []
+    anchor_count = min(256, len(candidates))
+    anchor_indices = rng.choice(
+        len(candidates),
+        size=anchor_count,
+        replace=False,
+    )
+    for anchor_value in anchor_indices:
+        anchor = int(anchor_value)
+        neighbors = []
+        for index in range(len(candidates)):
+            if index == anchor:
+                continue
+            ratio = shared_subpath_ratio(
+                route_sets[anchor],
+                route_sets[index],
+            )
+            if min_ratio <= ratio <= max_ratio:
+                neighbors.append((index, ratio))
+        if len(neighbors) > len(best_neighbors):
+            best_anchor = anchor
+            best_neighbors = neighbors
+
+    if best_anchor is None or len(best_neighbors) < num_bases - 1:
+        raise ValueError(
+            "cannot find enough shared-subpath bases; "
+            "lower min-shared-subpath-ratio or enlarge candidate-pool-size"
+        )
+
+    selected_positions = rng.choice(
+        len(best_neighbors),
+        size=num_bases - 1,
+        replace=False,
+    )
+    selected_indices = [best_anchor] + [
+        best_neighbors[int(position)][0]
+        for position in selected_positions
+    ]
+    return [candidates[index] for index in selected_indices]
 
 
 def add_spatial_noise(polyline, sigma_meters, rng):
@@ -209,16 +317,18 @@ def random_drop(polyline, elapsed_seconds, dropout_rate, rng):
     return polyline[keep], elapsed_seconds[keep]
 
 
-def transform_time(elapsed_seconds, mode, shift_minutes, speed_scale):
-    elapsed_seconds = elapsed_seconds.astype(np.float64)
+def transform_time(absolute_seconds, mode, shift_minutes, speed_scale):
+    """在 addTimeNoise 之后执行 timeShift 或 speedScale。"""
+    absolute_seconds = absolute_seconds.astype(np.float64)
     if mode == "original":
-        return elapsed_seconds
+        return absolute_seconds
     if mode == "time_shift":
-        return elapsed_seconds + shift_minutes * 60.0
+        return absolute_seconds + shift_minutes * 60.0
     if mode == "speed_scale":
         if speed_scale <= 0:
             raise ValueError("speed-scale must be positive")
-        return elapsed_seconds / speed_scale
+        start = absolute_seconds[0]
+        return start + (absolute_seconds - start) / speed_scale
     raise ValueError(f"unknown temporal mode: {mode}")
 
 
@@ -232,29 +342,33 @@ def add_monotonic_time_noise(elapsed_seconds, max_noise_minutes, rng):
     return np.maximum.accumulate(noisy)
 
 
-def allocate_cluster_sizes(total_samples, num_clusters):
-    sizes = np.full(num_clusters, total_samples // num_clusters, dtype=np.int64)
-    sizes[: total_samples % num_clusters] += 1
-    return sizes
+def sample_cluster_sizes(num_clusters, min_size, max_size, rng):
+    """对应 Algorithm 1 中每个簇独立执行 randint(minN, maxN)。"""
+    return rng.integers(
+        low=min_size,
+        high=max_size + 1,
+        size=num_clusters,
+    )
 
 
-def build_rows(bases, args, rng):
+def build_rows(bases, cluster_sizes, args, rng):
     modes = ("original", "time_shift", "speed_scale")
-    num_clusters = len(bases) * len(modes)
-    cluster_sizes = allocate_cluster_sizes(args.total_samples, num_clusters)
     rows = []
 
     for base_index, base in enumerate(bases):
         base_polyline = base["polyline"]
-        base_elapsed = np.arange(len(base_polyline)) * SECONDS_PER_RAW_TIME_SLOT
         start_second = base["timestamp"] % (24 * 60 * 60)
+        base_absolute_seconds = (
+            start_second
+            + np.arange(len(base_polyline)) * SECONDS_PER_RAW_TIME_SLOT
+        )
 
         for mode_index, mode in enumerate(modes):
             label = base_index * len(modes) + mode_index
             for _ in range(int(cluster_sizes[label])):
-                polyline, elapsed = random_drop(
+                polyline, absolute_seconds = random_drop(
                     base_polyline,
-                    base_elapsed,
+                    base_absolute_seconds,
                     args.dropout_rate,
                     rng,
                 )
@@ -263,18 +377,18 @@ def build_rows(bases, args, rng):
                     args.spatial_noise_meters,
                     rng,
                 )
-                elapsed = transform_time(
-                    elapsed,
+                # Algorithm 1：先 addTimeNoise，再 timeShift/speedScale。
+                absolute_seconds = add_monotonic_time_noise(
+                    absolute_seconds,
+                    args.time_noise_minutes,
+                    rng,
+                )
+                absolute_seconds = transform_time(
+                    absolute_seconds,
                     mode,
                     args.time_shift_minutes,
                     args.speed_scale,
                 )
-                elapsed = add_monotonic_time_noise(
-                    elapsed,
-                    args.time_noise_minutes,
-                    rng,
-                )
-                absolute_seconds = start_second + elapsed
                 raw_time = np.floor_divide(
                     absolute_seconds.astype(np.int64),
                     SECONDS_PER_RAW_TIME_SLOT,
@@ -290,7 +404,9 @@ def build_rows(bases, args, rng):
                     "label": label,
                     "trajLen": len(polyline),
                     "trajHash": geohashes,
-                    "duration": float((elapsed[-1] - elapsed[0]) / 60.0),
+                    "duration": float(
+                        (absolute_seconds[-1] - absolute_seconds[0]) / 60.0
+                    ),
                     "base_trip_id": base["trip_id"],
                     "temporal_mode": mode,
                 })
@@ -325,12 +441,56 @@ def validate_args(args):
         raise FileNotFoundError(args.input)
     if args.num_base_trajectories <= 0:
         raise ValueError("num-base-trajectories must be positive")
-    if args.total_samples < args.num_base_trajectories * 3:
-        raise ValueError("total-samples is too small")
+    if args.min_cluster_size <= 0:
+        raise ValueError("min-cluster-size must be positive")
+    if args.max_cluster_size < args.min_cluster_size:
+        raise ValueError("max-cluster-size must be no smaller than min-cluster-size")
     if not 0 <= args.dropout_rate < 1:
         raise ValueError("dropout-rate must be in [0, 1)")
     if args.max_base_length > args.max_sequence_length:
         raise ValueError("max-base-length cannot exceed max-sequence-length")
+    if args.min_base_distinct_locations <= 0:
+        raise ValueError("min-base-distinct-locations must be positive")
+    if args.min_base_distinct_locations > args.max_base_length:
+        raise ValueError(
+            "min-base-distinct-locations cannot exceed max-base-length"
+        )
+    if not (
+        0.0
+        <= args.min_shared_subpath_ratio
+        <= args.max_shared_subpath_ratio
+        <= 1.0
+    ):
+        raise ValueError(
+            "shared-subpath ratios must satisfy 0 <= min <= max <= 1"
+        )
+
+
+def summarize_base_overlap(bases, precision):
+    route_sets = [route_geohashes(item, precision) for item in bases]
+    ratios = []
+    same_origin_pairs = 0
+    pair_count = 0
+    origins = []
+    for base in bases:
+        lon, lat = base["polyline"][0]
+        origins.append(encode_geohash(lon, lat, precision))
+    for left in range(len(bases)):
+        for right in range(left + 1, len(bases)):
+            ratios.append(shared_subpath_ratio(route_sets[left], route_sets[right]))
+            same_origin_pairs += origins[left] == origins[right]
+            pair_count += 1
+    values = np.asarray(ratios, dtype=np.float64)
+    return {
+        "same_origin_pair_ratio": (
+            same_origin_pairs / pair_count if pair_count else 0.0
+        ),
+        "shared_subpath_ratio": {
+            "min": float(values.min()) if len(values) else 0.0,
+            "mean": float(values.mean()) if len(values) else 0.0,
+            "max": float(values.max()) if len(values) else 0.0,
+        },
+    }
 
 
 def save_dataset(rows, bases, location_vocab, args):
@@ -357,7 +517,14 @@ def save_dataset(rows, bases, location_vocab, args):
     with (output_dir / "location_vocab.json").open("w", encoding="utf-8") as file:
         json.dump(location_vocab, file, ensure_ascii=False, indent=2)
 
+    base_geohashes = {
+        encode_geohash(lon, lat, args.geohash_precision)
+        for base in bases
+        for lon, lat in base["polyline"]
+    }
+    raw_location_count = len(location_vocab) - len(SPECIAL_TOKENS)
     metadata = {
+        "dataset_revision": 3,
         "source": str(args.input.resolve()),
         "paper_aligned_reconstruction": True,
         "seed": args.seed,
@@ -365,20 +532,40 @@ def save_dataset(rows, bases, location_vocab, args):
         "base_trip_ids": [item["trip_id"] for item in bases],
         "num_clusters": len(bases) * 3,
         "total_samples": len(dataframe),
+        "base_selection": args.base_selection,
+        "base_overlap": summarize_base_overlap(
+            bases,
+            args.geohash_precision,
+        ),
+        "base_candidate_filters": {
+            "min_length": args.min_base_length,
+            "max_length": args.max_base_length,
+            "min_distinct_locations": args.min_base_distinct_locations,
+        },
+        "cluster_size_range": {
+            "min": args.min_cluster_size,
+            "max": args.max_cluster_size,
+        },
         "cluster_sizes": {
             str(label): int(count)
             for label, count in dataframe["label"].value_counts().sort_index().items()
         },
         "temporal_modes": ["original", "time_shift", "speed_scale"],
         "dropout_rate": args.dropout_rate,
-        "spatial_noise_meters": args.spatial_noise_meters,
+        "paper_spatial_noise_meters": 50.0,
+        "effective_spatial_noise_meters": args.spatial_noise_meters,
         "time_noise_minutes": args.time_noise_minutes,
         "time_shift_minutes": args.time_shift_minutes,
         "speed_scale": args.speed_scale,
         "geohash_precision": args.geohash_precision,
         "max_sequence_length": args.max_sequence_length,
         "location_vocab_size": len(location_vocab),
-        "raw_location_count": len(location_vocab) - len(SPECIAL_TOKENS),
+        "base_raw_location_count": len(base_geohashes),
+        "raw_location_count": raw_location_count,
+        "token_vocab_growth_ratio": (
+            raw_location_count / len(base_geohashes)
+            if base_geohashes else float("nan")
+        ),
         "trajectory_length": {
             "min": int(dataframe["trajLen"].min()),
             "mean": float(dataframe["trajLen"].mean()),
@@ -394,6 +581,7 @@ def save_dataset(rows, bases, location_vocab, args):
             ],
             "reconstruction_choices": [
                 "selected base trajectory IDs",
+                "effective spatial noise inferred from public QD token behavior",
                 "dropout rate",
                 "time shift",
                 "speed scale",
@@ -409,30 +597,56 @@ def save_dataset(rows, bases, location_vocab, args):
 def main():
     args = parse_args()
     validate_args(args)
-    rng = np.random.default_rng(args.seed)
+    seed_sequence = np.random.SeedSequence(args.seed)
+    candidate_seed, selection_seed, size_seed, sample_seed = seed_sequence.spawn(4)
+    candidate_rng = np.random.default_rng(candidate_seed)
+    selection_rng = np.random.default_rng(selection_seed)
+    size_rng = np.random.default_rng(size_seed)
+    sample_rng = np.random.default_rng(sample_seed)
     candidates = collect_candidate_bases(
         input_path=args.input,
         pool_size=args.candidate_pool_size,
         min_length=args.min_base_length,
         max_length=args.max_base_length,
-        rng=rng,
+        min_distinct_locations=args.min_base_distinct_locations,
+        geohash_precision=args.geohash_precision,
+        rng=candidate_rng,
     )
-    bases = select_diverse_bases(
-        candidates,
-        args.num_base_trajectories,
-        rng,
-    )
+    if args.base_selection == "random":
+        bases = select_random_bases(
+            candidates,
+            args.num_base_trajectories,
+            selection_rng,
+        )
+    else:
+        bases = select_shared_subpath_bases(
+            candidates=candidates,
+            num_bases=args.num_base_trajectories,
+            precision=args.geohash_precision,
+            min_ratio=args.min_shared_subpath_ratio,
+            max_ratio=args.max_shared_subpath_ratio,
+            rng=selection_rng,
+        )
     print("selected base trip IDs:")
     for index, base in enumerate(bases):
         print(f"  path {index}: {base['trip_id']} (length={len(base['polyline'])})")
 
-    rows = build_rows(bases, args, rng)
+    cluster_sizes = sample_cluster_sizes(
+        num_clusters=args.num_base_trajectories * 3,
+        min_size=args.min_cluster_size,
+        max_size=args.max_cluster_size,
+        rng=size_rng,
+    )
+    rows = build_rows(bases, cluster_sizes, args, sample_rng)
     location_vocab = encode_and_pad_rows(rows, args.max_sequence_length)
     dataframe, metadata = save_dataset(rows, bases, location_vocab, args)
     print("saved dataset:", args.output_dir.resolve())
     print("shape:", dataframe.shape)
     print("clusters:", metadata["cluster_sizes"])
     print("location vocab size:", metadata["location_vocab_size"])
+    print("base raw locations:", metadata["base_raw_location_count"])
+    print("token vocab growth ratio:", metadata["token_vocab_growth_ratio"])
+    print("base overlap:", metadata["base_overlap"])
     print("trajectory length:", metadata["trajectory_length"])
 
 
