@@ -95,6 +95,7 @@ def evaluate_checkpoint(
     checkpoint_path,
     batch_size=256,
     max_batches=None,
+    dataset_name=None,
 ):
     device = get_device()
     print("device:", device)
@@ -104,7 +105,18 @@ def evaluate_checkpoint(
         weights_only=True,
     )
     config = checkpoint["configs"]
+    if dataset_name is None:
+        dataset_name = config.get("dataset", "qdTimeNoise0424")
+    print("dataset:", dataset_name)
+    dataset = QDTrajectoryDataset(dataset_name=dataset_name)
     model = ContrastiveTrajectoryModel(
+        location_vocab_size=config.get(
+            "location_vocab_size", dataset.location_vocab_size
+        ),
+        time_vocab_size=config.get(
+            "time_vocab_size", dataset.time_vocab_size
+        ),
+        max_length=config.get("max_length", dataset.max_length),
         num_clusters=config["num_clusters"],
     ).to(device)
     model.load_state_dict(
@@ -112,7 +124,7 @@ def evaluate_checkpoint(
         strict=True,
     )
     loader = DataLoader(
-        QDTrajectoryDataset(),
+        dataset,
         batch_size=batch_size,
         shuffle=False,
         num_workers=0,

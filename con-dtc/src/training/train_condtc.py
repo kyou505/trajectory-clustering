@@ -186,6 +186,7 @@ def train_one_epoch(
 
 def train_condtc(
         num_epochs,
+        dataset_name="qdTimeNoise0424",
         batch_size=32,
         initialization_batch_size=256,
         num_clusters=12,
@@ -225,6 +226,7 @@ def train_condtc(
         torch.cuda.manual_seed_all(seed)
     device = get_device()
     print("device:", device)
+    print("dataset:", dataset_name)
     project_dir = Path(__file__).resolve().parents[2]
     if pretrain_checkpoint_path is None:
         pretrain_checkpoint_path = project_dir / "checkpoints" / "sttraj2vec_pretrain_best.pt"
@@ -244,8 +246,15 @@ def train_condtc(
     output_checkpoint_path = checkpoint_dir / "condtc_best.pt"
     target_history_dir = output_dir / "target_history"
     target_history_dir.mkdir(parents=True, exist_ok=True)
-    dataset = QDTrajectoryDataset()
-    model = ContrastiveTrajectoryModel(num_clusters=num_clusters).to(device)
+    representation_history_dir = output_dir / "representation_history"
+    representation_history_dir.mkdir(parents=True, exist_ok=True)
+    dataset = QDTrajectoryDataset(dataset_name=dataset_name)
+    model = ContrastiveTrajectoryModel(
+        location_vocab_size=dataset.location_vocab_size,
+        time_vocab_size=dataset.time_vocab_size,
+        max_length=dataset.max_length,
+        num_clusters=num_clusters,
+    ).to(device)
     model.load_pretrained_components(
         pretrain_checkpoint_path,
         map_location=device,
@@ -256,7 +265,7 @@ def train_condtc(
         shuffle=False,
         num_workers=0,
     )
-    embeddings, _ = extract_trajectory_embeddings(
+    embeddings, embedding_labels = extract_trajectory_embeddings(
         model=model,
         loader=initialization_loader,
         device=device,
@@ -269,6 +278,15 @@ def train_condtc(
         seed=seed,
         n_init=20,
     )
+    # torch.save(
+    #     {
+    #         "epoch": 0,
+    #         "embeddings": embeddings.detach().cpu(),
+    #         "labels": embedding_labels.detach().cpu(),
+    #         "cluster_centers": model.clustering_layer.cluster_centers.detach().cpu()
+    #     },
+    #     representation_history_dir / "epoch_000.pt",
+    # )
     optimizer = create_optimizer(
         model=model,
         representation_learning_rate=representation_learning_rate,
@@ -286,7 +304,8 @@ def train_condtc(
     train_loader = create_contrastive_data_loader(
         batch_size=batch_size,
         seed=seed,
-        shuffle=True
+        shuffle=True,
+        base_dataset=dataset,
     )
     target_loader = DataLoader(
         train_loader.dataset,
@@ -434,6 +453,30 @@ def train_condtc(
             max_batches=max_train_batches,
             log_interval=log_interval,
         )
+        # epoch_embeddings, epoch_labels = (
+        #     extract_trajectory_embeddings(
+        #         model=model,
+        #         loader=initialization_loader,
+        #         device=device,
+        #         max_batches=max_initialization_batches,
+        #     )
+        # )
+        # torch.save(
+        #     {
+        #         "epoch": epoch,
+        #         "embeddings": epoch_embeddings.detach().cpu(),
+        #         "labels": epoch_labels.detach().cpu(),
+        #         "cluster_centers": (
+        #             model.clustering_layer.cluster_centers
+        #             .detach()
+        #             .cpu()
+        #         ),
+        #     },
+        #     (
+        #             representation_history_dir
+        #             / f"epoch_{epoch:03d}.pt"
+        #     ),
+        # )
         
         print(
             "Train: "
@@ -489,6 +532,10 @@ def train_condtc(
                 "kmeans_inertia": float(kmeans.inertia_),
                 "target_ema_state_dict": target_ema.state_dict(),
                 "configs": {
+                    "dataset": dataset_name,
+                    "location_vocab_size": dataset.location_vocab_size,
+                    "time_vocab_size": dataset.time_vocab_size,
+                    "max_length": dataset.max_length,
                     "batch_size": batch_size,
                     "num_clusters": num_clusters,
                     "time_loss_weight": time_loss_weight,

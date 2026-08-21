@@ -143,6 +143,7 @@ def main():
                 }
             model, history, checkpoint_path = train_condtc(
                 num_epochs=config.training.num_epochs,
+                dataset_name=config.data.dataset,
                 batch_size=config.data.batch_size,
                 initialization_batch_size=config.data.initialization_batch_size,
                 num_clusters=config.model.num_clusters,

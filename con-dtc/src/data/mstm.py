@@ -8,15 +8,26 @@ class MSTMDataset(Dataset):
         self,
         base_dataset,
         mask_ratio=0.15,
-        location_vocab_size=148,
-        time_vocab_size=1444,
+        location_vocab_size=None,
+        time_vocab_size=None,
         deterministic= False, # 来控制 MSTM 的随机遮盖是否固定
         seed=0
     ):
         self.base_dataset = base_dataset
         self.mask_ratio = mask_ratio
-        self.location_vocab_size = location_vocab_size
-        self.time_vocab_size = time_vocab_size
+        dataset_metadata = base_dataset
+        while hasattr(dataset_metadata, "dataset"):
+            dataset_metadata = dataset_metadata.dataset
+        self.location_vocab_size = (
+            location_vocab_size
+            if location_vocab_size is not None
+            else dataset_metadata.location_vocab_size
+        )
+        self.time_vocab_size = (
+            time_vocab_size
+            if time_vocab_size is not None
+            else dataset_metadata.time_vocab_size
+        )
         self.deterministic = deterministic
         self.seed = seed
 

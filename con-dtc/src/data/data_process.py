@@ -5,12 +5,10 @@ import torch
 from torch.utils.data import Dataset
 
 PROJECT_DIR = Path(__file__).resolve().parents[2]
-DATA_DIR = PROJECT_DIR / "data" / "qdTimeNoise0424"
-VOCAB_PATH = DATA_DIR / "location_vocab.json"
-LENGTH_PATH = DATA_DIR / "trj_length.csv"
+DEFAULT_DATASET = "qdTimeNoise0424"
 
-def load_location_vocab():
-    with VOCAB_PATH.open("r", encoding="utf-8") as f:
+def load_location_vocab(vocab_path):
+    with vocab_path.open("r", encoding="utf-8") as f:
         vocab = json.load(f)
     return vocab
 
@@ -37,10 +35,20 @@ def encode_time(time_sequence):
     return encoded
 
 class QDTrajectoryDataset(Dataset):
-    def __init__(self):
-        self.data = pd.read_hdf(DATA_DIR / "data_k3.h5", key="x")
-        self.length = pd.read_csv(LENGTH_PATH)["length"].to_numpy()
-        self.location_vocab = load_location_vocab()
+    def __init__(self, dataset_name=DEFAULT_DATASET):
+        data_dir = PROJECT_DIR / "data" / dataset_name
+        self.data = pd.read_hdf(data_dir / "data_k3.h5", key="x")
+        self.length = pd.read_csv(data_dir / "trj_length.csv")["length"].to_numpy()
+        self.location_vocab = load_location_vocab(
+            data_dir / "location_vocab.json"
+        )
+        self.location_vocab_size = len(self.location_vocab)
+        self.time_vocab_size = 1444
+
+        if self.data.empty:
+            raise ValueError(f"Dataset is empty: {data_dir}")
+        padded_length = len(self.data.iloc[0]["trajectory"].split())
+        self.max_length = padded_length + 2  # [CLS] 和 [SEP]
         
         if len(self.data) != len(self.length):
             raise ValueError("Data and length files must have the same number of rows.")
@@ -66,10 +74,16 @@ class QDTrajectoryDataset(Dataset):
         ]
         location_ids = torch.tensor(location_ids, dtype=torch.long)
         time_ids = torch.tensor(time_ids, dtype=torch.long)
+
+        if len(location_ids) != self.max_length:
+            raise ValueError(
+                f"Inconsistent padded length at row {idx}: "
+                f"expected {self.max_length}, got {len(location_ids)}"
+            )
         
         attention_mask = location_ids.ne(0)
         #
-        pooling_mask = torch.zeros(62, dtype=torch.bool)
+        pooling_mask = torch.zeros_like(location_ids, dtype=torch.bool)
         pooling_mask[1 : length+1] = True
         
         return {

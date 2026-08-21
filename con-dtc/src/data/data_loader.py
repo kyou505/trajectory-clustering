@@ -7,9 +7,12 @@ from src.data.mstm import MSTMDataset
 
 def create_data_loaders(
     batch_size=32,
-    seed=0
+    seed=0,
+    dataset_name="qdTimeNoise0424",
+    base_dataset=None,
 ):
-    base_dataset = QDTrajectoryDataset()
+    if base_dataset is None:
+        base_dataset = QDTrajectoryDataset(dataset_name=dataset_name)
     total_size = len(base_dataset)
     
     train_size = int(total_size * 0.8)

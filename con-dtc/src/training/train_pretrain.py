@@ -1,8 +1,10 @@
+import argparse
 from pathlib import Path
 
 import torch
 
 from src.data.data_loader import create_data_loaders
+from src.data.data_process import QDTrajectoryDataset
 from src.models.pretrain_model import (
     MSTMLoss,
     STTraj2VecPretrainModel
@@ -301,11 +303,22 @@ def pretrain(
         seed=42,
         max_train_batches=None,
         max_valid_batches=None,
+        dataset_name="qdTimeNoise0424",
+        checkpoint_path=None,
 ):
     torch.manual_seed(seed)
     device = get_device()
-    train_loader, valid_loader, _ = create_data_loaders(batch_size=batch_size, seed=seed)
-    model=STTraj2VecPretrainModel().to(device)
+    base_dataset = QDTrajectoryDataset(dataset_name=dataset_name)
+    train_loader, valid_loader, _ = create_data_loaders(
+        batch_size=batch_size,
+        seed=seed,
+        base_dataset=base_dataset,
+    )
+    model = STTraj2VecPretrainModel(
+        location_vocab_size=base_dataset.location_vocab_size,
+        time_vocab_size=base_dataset.time_vocab_size,
+        max_length=base_dataset.max_length,
+    ).to(device)
     criterion=MSTMLoss(time_loss_weight=time_loss_weight)
     optimizer = torch.optim.AdamW(
         model.parameters(),
@@ -315,7 +328,13 @@ def pretrain(
     project_dir = Path(__file__).resolve().parents[2]
     checkpoint_dir = project_dir / "checkpoints"
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
-    checkpoint_path = checkpoint_dir / "sttraj2vec_pretrain_best.pt"
+    if checkpoint_path is None:
+        checkpoint_path = checkpoint_dir / "sttraj2vec_pretrain_best.pt"
+    else:
+        checkpoint_path = Path(checkpoint_path)
+        if not checkpoint_path.is_absolute():
+            checkpoint_path = project_dir / checkpoint_path
+        checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
     best_valid_loss = float("inf")
     history = []
     for epoch in range(1, num_epochs+1):
@@ -368,6 +387,10 @@ def pretrain(
                     "optimizer_state_dict": optimizer.state_dict(),
                     "valid_metrics": valid_metrics,
                     "configs": {
+                        "dataset": dataset_name,
+                        "location_vocab_size": base_dataset.location_vocab_size,
+                        "time_vocab_size": base_dataset.time_vocab_size,
+                        "max_length": base_dataset.max_length,
                         "batch_size": batch_size,
                         "learning_rate": learning_rate,
                         "time_loss_weight": time_loss_weight,
@@ -383,12 +406,34 @@ def pretrain(
     print("Best valid loss:", best_valid_loss)
     return model, history
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Pretrain STTraj2Vec")
+    parser.add_argument("--dataset", default="qdTimeNoise0424")
+    parser.add_argument("--num-epochs", type=int, default=1)
+    parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument("--learning-rate", type=float, default=1.5e-4)
+    parser.add_argument("--time-loss-weight", type=float, default=0.1)
+    parser.add_argument("--weight-decay", type=float, default=0.01)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--max-train-batches", type=int)
+    parser.add_argument("--max-valid-batches", type=int)
+    parser.add_argument("--checkpoint-path")
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
     pretrain(
-        num_epochs=1,
-        batch_size=8,
-        max_train_batches=5,
-        max_valid_batches=2
+        num_epochs=args.num_epochs,
+        batch_size=args.batch_size,
+        learning_rate=args.learning_rate,
+        time_loss_weight=args.time_loss_weight,
+        weight_decay=args.weight_decay,
+        seed=args.seed,
+        max_train_batches=args.max_train_batches,
+        max_valid_batches=args.max_valid_batches,
+        dataset_name=args.dataset,
+        checkpoint_path=args.checkpoint_path,
     )
 
 if __name__ == "__main__":
