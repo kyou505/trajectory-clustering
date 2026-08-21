@@ -53,8 +53,17 @@ class ConDTCTotalLoss(nn.Module):
             location_targets=location_targets,
             time_targets=time_targets,
         )
-        instance_contrastive_loss = self.instance_contrastive_loss(head_in1, head_in2)
-        cluster_contrastive_loss = self.cluster_contrastive_loss(head_cl1, head_cl2)
+        # 权重为 0 的 InfoNCE 不参与优化，跳过计算；
+        # 否则末尾 batch 只剩 1 条样本时会因对比样本不足而报错。
+        zero = q1.new_zeros(())
+        if self.instance_loss_weight != 0.0:
+            instance_contrastive_loss = self.instance_contrastive_loss(head_in1, head_in2)
+        else:
+            instance_contrastive_loss = zero
+        if self.cluster_contrastive_loss_weight != 0.0:
+            cluster_contrastive_loss = self.cluster_contrastive_loss(head_cl1, head_cl2)
+        else:
+            cluster_contrastive_loss = zero
         clustering_losses = self.clustering_loss(
             q1=q1,
             q2=q2,

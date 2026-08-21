@@ -1,0 +1,40 @@
+experiment:
+  name: porto/entropy_target_mix/condtc_porto_finegrained_s3_m07_p70_a015
+  output_root: runs
+data:
+  dataset: portoTimeNoiseFineGrained
+  batch_size: 32
+  initialization_batch_size: 256
+model:
+  num_clusters: 27
+loss:
+  time_loss_weight: 0.1
+  clustering_loss_weight: 0.5
+  instance_temperature: 0.5
+  cluster_temperature: 1.0
+  instance_loss_weight: 0.0
+  cluster_contrastive_loss_weight: 0.0
+optimizer:
+  representation_learning_rate: 5.0e-05
+  clustering_learning_rate: 0.00015
+  weight_decay: 0.01
+training:
+  num_epochs: 6
+  seed: 42
+  log_interval: 50
+  max_initialization_batches: null
+  max_train_batches: null
+checkpoint:
+  pretrain_path: checkpoints/sttraj2vec_porto_finegrained_pre15.pt
+target_history:
+  momentum: 0.7
+  save_interval: 1
+  save_raw_assignments: true
+  start_epoch: 3
+  weight_warmup: false
+  weighting_signal: stability
+  entropy_target_mix_enabled: true
+  entropy_quantile: 0.7
+  entropy_upper_quantile: null
+  high_entropy_ema_alpha: 0.15
+  minimum_weight: null
