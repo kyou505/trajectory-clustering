@@ -183,8 +183,8 @@ class CrossViewSoftTargetEMA:
         # momentum=1.0 表示目标冻结在初始化状态（纯历史，零适应）
         if not 0.0 <= momentum <= 1.0:
             raise ValueError("momentum must be in [0, 1]")
-        if not 0.0 < minimum_weight <= 1.0:
-            raise ValueError("minimum_weight must be in (0, 1]")
+        if minimum_weight <= 0.0:
+            raise ValueError("minimum_weight must be greater than 0")
         self.momentum = momentum
         # minimum_weight=1.0 时全体样本权重恒为 1，数学上等价于关闭加权
         self.minimum_weight = minimum_weight

@@ -206,8 +206,8 @@ def validate_experiment_config(config):
         if not (1 <= target_history.start_epoch <= config.training.num_epochs):
             raise ValueError("target_history.start_epoch must be between 1 and training.num_epochs")
         if target_history.minimum_weight is not None:
-            if not 0.0 < target_history.minimum_weight <= 1.0:
-                raise ValueError("target_history.minimum_weight must be in (0, 1]")
+            if target_history.minimum_weight <= 0.0:
+                raise ValueError("target_history.minimum_weight must be greater than 0")
 
         if target_history.weight_warmup and target_history.minimum_weight is None:
             raise ValueError("weight_warmup requires minimum_weight")
@@ -221,15 +221,6 @@ def validate_experiment_config(config):
             raise ValueError(
                 "target_history.high_entropy_ema_alpha must be in [0, 1]"
             )
-
-        if (
-            target_history.entropy_target_mix_enabled
-            and target_history.minimum_weight is not None
-        ):
-            raise ValueError(
-                "entropy target mix cannot be combined with DEC sample weighting"
-            )
-
         if target_history.weighting_signal not in {
             "stability",
             "margin",

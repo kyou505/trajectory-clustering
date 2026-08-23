@@ -1,0 +1,135 @@
+experiment initialized
+run directory: /root/trajectory-clustering/con-dtc/runs/condtc_porto_finegrained_s3_m07_reverse_stability_w125/20260823_130449_seed19721013
+config snapshot: /root/trajectory-clustering/con-dtc/runs/condtc_porto_finegrained_s3_m07_reverse_stability_w125/20260823_130449_seed19721013/config.yaml
+device: cuda
+dataset: portoTimeNoiseFineGrained
+pretrain checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_porto_finegrained_pre15.pt
+epoch=1 / num_epochs=6
+batch=0050 loss=0.9933 representation_loss=0.6956 clustering_loss=0.5954 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.9855 representation_loss=0.7154 clustering_loss=0.5402 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.8866 representation_loss=0.6536 clustering_loss=0.4659 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.8152 representation_loss=0.6287 clustering_loss=0.3730 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.9373 representation_loss=0.7379 clustering_loss=0.3987 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.8762 representation_loss=0.6543 clustering_loss=0.4438 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.9102 representation_loss=0.7217 clustering_loss=0.3771 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.8959 representation_loss=0.6792 clustering_loss=0.4334 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.9163 representation_loss=0.7086 clustering_loss=0.4154 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.8080 representation_loss=0.6091 clustering_loss=0.3980 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.8387 representation_loss=0.6356 clustering_loss=0.4062 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.9432 representation_loss=0.7647 clustering_loss=0.3570 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.8315 representation_loss=0.6331 clustering_loss=0.3969 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.8201 representation_loss=0.6354 clustering_loss=0.3694 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.9114 representation_loss=0.7529 clustering_loss=0.3171 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.8585 representation_loss=0.6829 clustering_loss=0.3512 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.8338 representation_loss=0.7025 clustering_loss=0.2625 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.8819 mstm=0.6804 instance_nce=0.0000 cluster_nce=0.0000 dec=0.4030
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_porto_finegrained_s3_m07_reverse_stability_w125/20260823_130449_seed19721013/checkpoints/condtc_best.pt
+epoch=2 / num_epochs=6
+batch=0050 loss=0.8307 representation_loss=0.6473 clustering_loss=0.3668 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.7994 representation_loss=0.6292 clustering_loss=0.3405 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.8030 representation_loss=0.6276 clustering_loss=0.3508 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.8728 representation_loss=0.7053 clustering_loss=0.3350 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.8413 representation_loss=0.6842 clustering_loss=0.3142 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.8527 representation_loss=0.7002 clustering_loss=0.3049 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.7723 representation_loss=0.6186 clustering_loss=0.3073 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.8644 representation_loss=0.7073 clustering_loss=0.3143 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.8338 representation_loss=0.6678 clustering_loss=0.3320 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.8769 representation_loss=0.7350 clustering_loss=0.2837 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.8253 representation_loss=0.6633 clustering_loss=0.3240 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.7747 representation_loss=0.6200 clustering_loss=0.3094 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.8560 representation_loss=0.7159 clustering_loss=0.2800 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.8750 representation_loss=0.7320 clustering_loss=0.2860 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.7567 representation_loss=0.6144 clustering_loss=0.2846 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.8754 representation_loss=0.7311 clustering_loss=0.2886 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.7609 representation_loss=0.6174 clustering_loss=0.2869 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.8197 mstm=0.6612 instance_nce=0.0000 cluster_nce=0.0000 dec=0.3170
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_porto_finegrained_s3_m07_reverse_stability_w125/20260823_130449_seed19721013/checkpoints/condtc_best.pt
+epoch=3 / num_epochs=6
+batch=0050 loss=0.7978 representation_loss=0.6481 clustering_loss=0.2994 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.8421 representation_loss=0.7032 clustering_loss=0.2776 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.7958 representation_loss=0.6531 clustering_loss=0.2853 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.7168 representation_loss=0.5796 clustering_loss=0.2744 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.8474 representation_loss=0.7196 clustering_loss=0.2556 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.7859 representation_loss=0.6615 clustering_loss=0.2488 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.8783 representation_loss=0.7529 clustering_loss=0.2507 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.7120 representation_loss=0.5753 clustering_loss=0.2734 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.8411 representation_loss=0.7144 clustering_loss=0.2533 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.7923 representation_loss=0.6549 clustering_loss=0.2746 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.7871 representation_loss=0.6672 clustering_loss=0.2399 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.7795 representation_loss=0.6439 clustering_loss=0.2712 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.9692 representation_loss=0.8325 clustering_loss=0.2733 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.8017 representation_loss=0.6804 clustering_loss=0.2426 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.7554 representation_loss=0.6384 clustering_loss=0.2341 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.8611 representation_loss=0.7332 clustering_loss=0.2557 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.8564 representation_loss=0.7277 clustering_loss=0.2575 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.7834 mstm=0.6514 instance_nce=0.0000 cluster_nce=0.0000 dec=0.2639
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_porto_finegrained_s3_m07_reverse_stability_w125/20260823_130449_seed19721013/checkpoints/condtc_best.pt
+epoch=4 / num_epochs=6
+batch=0050 loss=0.7575 representation_loss=0.6297 clustering_loss=0.2556 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.6470 representation_loss=0.5142 clustering_loss=0.2657 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.7179 representation_loss=0.6042 clustering_loss=0.2273 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.7516 representation_loss=0.6217 clustering_loss=0.2599 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.8580 representation_loss=0.7339 clustering_loss=0.2483 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.8000 representation_loss=0.6858 clustering_loss=0.2283 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.6594 representation_loss=0.5467 clustering_loss=0.2253 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.7523 representation_loss=0.6361 clustering_loss=0.2324 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.7644 representation_loss=0.6512 clustering_loss=0.2263 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.6329 representation_loss=0.5117 clustering_loss=0.2424 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.6616 representation_loss=0.5430 clustering_loss=0.2371 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.7407 representation_loss=0.6284 clustering_loss=0.2247 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.8347 representation_loss=0.7298 clustering_loss=0.2097 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.7521 representation_loss=0.6419 clustering_loss=0.2204 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.7050 representation_loss=0.5970 clustering_loss=0.2161 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.7555 representation_loss=0.6424 clustering_loss=0.2264 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.6917 representation_loss=0.5857 clustering_loss=0.2119 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.7574 mstm=0.6386 instance_nce=0.0000 cluster_nce=0.0000 dec=0.2374
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_porto_finegrained_s3_m07_reverse_stability_w125/20260823_130449_seed19721013/checkpoints/condtc_best.pt
+epoch=5 / num_epochs=6
+batch=0050 loss=0.7402 representation_loss=0.6228 clustering_loss=0.2349 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.7233 representation_loss=0.6068 clustering_loss=0.2331 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.7295 representation_loss=0.6172 clustering_loss=0.2246 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.7538 representation_loss=0.6356 clustering_loss=0.2364 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.7132 representation_loss=0.6102 clustering_loss=0.2060 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.7117 representation_loss=0.6034 clustering_loss=0.2167 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.7466 representation_loss=0.6356 clustering_loss=0.2220 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.6695 representation_loss=0.5532 clustering_loss=0.2326 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.6548 representation_loss=0.5378 clustering_loss=0.2340 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.6790 representation_loss=0.5673 clustering_loss=0.2235 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.6746 representation_loss=0.5654 clustering_loss=0.2183 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.7501 representation_loss=0.6373 clustering_loss=0.2255 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.7394 representation_loss=0.6353 clustering_loss=0.2083 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.7568 representation_loss=0.6514 clustering_loss=0.2108 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.8702 representation_loss=0.7658 clustering_loss=0.2089 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.7924 representation_loss=0.6819 clustering_loss=0.2211 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.7021 representation_loss=0.5957 clustering_loss=0.2127 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.7409 mstm=0.6303 instance_nce=0.0000 cluster_nce=0.0000 dec=0.2212
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_porto_finegrained_s3_m07_reverse_stability_w125/20260823_130449_seed19721013/checkpoints/condtc_best.pt
+epoch=6 / num_epochs=6
+batch=0050 loss=0.7269 representation_loss=0.6174 clustering_loss=0.2191 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0100 loss=0.6616 representation_loss=0.5544 clustering_loss=0.2145 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0150 loss=0.7441 representation_loss=0.6316 clustering_loss=0.2250 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0200 loss=0.7270 representation_loss=0.6156 clustering_loss=0.2229 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0250 loss=0.8035 representation_loss=0.6959 clustering_loss=0.2152 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0300 loss=0.6196 representation_loss=0.5248 clustering_loss=0.1896 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0350 loss=0.7382 representation_loss=0.6356 clustering_loss=0.2053 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0400 loss=0.7392 representation_loss=0.6306 clustering_loss=0.2170 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0450 loss=0.6599 representation_loss=0.5633 clustering_loss=0.1932 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0500 loss=0.7423 representation_loss=0.6388 clustering_loss=0.2069 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0550 loss=0.7400 representation_loss=0.6404 clustering_loss=0.1992 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0600 loss=0.7773 representation_loss=0.6671 clustering_loss=0.2204 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0650 loss=0.6394 representation_loss=0.5447 clustering_loss=0.1894 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0700 loss=0.7316 representation_loss=0.6276 clustering_loss=0.2081 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0750 loss=0.7671 representation_loss=0.6584 clustering_loss=0.2174 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0800 loss=0.6173 representation_loss=0.5179 clustering_loss=0.1988 instance_nce=0.0000 cluster_nce=0.0000 
+batch=0850 loss=0.6122 representation_loss=0.5128 clustering_loss=0.1988 instance_nce=0.0000 cluster_nce=0.0000 
+Train: loss=0.7242 mstm=0.6193 instance_nce=0.0000 cluster_nce=0.0000 dec=0.2099
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/condtc_porto_finegrained_s3_m07_reverse_stability_w125/20260823_130449_seed19721013/checkpoints/condtc_best.pt
+best train_loss:  0.7242453434619683
+evaluating: /root/trajectory-clustering/con-dtc/runs/condtc_porto_finegrained_s3_m07_reverse_stability_w125/20260823_130449_seed19721013/checkpoints/condtc_best.pt
+device: cuda
+dataset: portoTimeNoiseFineGrained
+cluster counts: tensor([1584,  786, 1871,  959,  776,  499, 1315, 1097,  742, 2037, 1088, 1038,
+         964, 1046,  914,  997,    0, 1017,  696,  387,  921, 1310, 1290,    0,
+        1577, 1388, 1006])
+metrics: {'uacc': 0.8217176341329426, 'nmi': 0.9153415387879341, 'ri': 0.9820529860058215, 'ari': 0.7718377344533518}
+metrics saved: /root/trajectory-clustering/con-dtc/runs/condtc_porto_finegrained_s3_m07_reverse_stability_w125/20260823_130449_seed19721013/metrics.json

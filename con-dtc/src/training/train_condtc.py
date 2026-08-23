@@ -431,7 +431,6 @@ def train_condtc(
             # 是否开启DEC加权
             use_reliability_weighting = (
                 sample_weighting_enabled
-                and not target_entropy_mix_enabled # 插值时不加权
                 and torch.isfinite(reliability).all()
             )
             if use_reliability_weighting:
