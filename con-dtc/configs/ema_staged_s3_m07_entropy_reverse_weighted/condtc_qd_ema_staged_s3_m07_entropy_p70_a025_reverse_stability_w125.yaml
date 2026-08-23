@@ -1,0 +1,68 @@
+# Con-DTC 青岛数据集：分阶段 EMA + P70/A0.25 熵目标插值 + 稳定性反向加权
+#
+# 该配置在 P70/A0.25 熵目标插值基础上，额外将不稳定样本的
+# DEC 原始权重提高到 [1.0, 1.25]。除此之外，其他设置与对照实验一致。
+
+experiment:
+  name: condtc_qd_ema_staged_s3_m07_entropy_p70_a025_reverse_stability_w125
+  output_root: runs
+
+data:
+  # 作者公开的青岛轨迹数据集。
+  dataset: qdTimeNoise0424
+  # 论文第 6.3 节：batch size = 32。
+  batch_size: 32
+  # 仅影响 KMeans 初始化和全局目标计算的显存占用。
+  initialization_batch_size: 256
+
+model:
+  # 青岛数据集包含 12 个真实簇。
+  num_clusters: 12
+
+loss:
+  # 论文公式（14）、（19）及图 5(c)：alpha = 0.1。
+  time_loss_weight: 0.1
+  # 论文公式（18）、（19）及图 5(c)：beta = 0.5。
+  clustering_loss_weight: 0.5
+  # 对应的两个 InfoNCE 权重为 0，温度不参与本实验优化。
+  instance_temperature: 0.5
+  cluster_temperature: 1.0
+  instance_loss_weight: 0.0
+  cluster_contrastive_loss_weight: 0.0
+
+optimizer:
+  # 论文第 6.3 节：表示层微调学习率为 5e-5。
+  representation_learning_rate: 0.00005
+  # 论文第 6.3 节：聚类层学习率为 15e-5。
+  clustering_learning_rate: 0.00015
+  weight_decay: 0.01
+
+training:
+  # 与已有 S3/M0.7 系列实验保持一致。
+  num_epochs: 6
+  seed: 19721013
+  log_interval: 50
+  max_initialization_batches: null
+  max_train_batches: null
+
+target_history:
+  # epoch 1～2 使用当前目标，epoch 3 起启用 EMA。
+  start_epoch: 3
+  momentum: 0.7
+
+  # 根据当前软聚类分配熵插值 EMA target 与当前 DEC target。
+  entropy_target_mix_enabled: true
+  # 熵最高的约 30% 样本进入高熵分支。
+  entropy_quantile: 0.7
+  # 高熵样本使用 25% EMA target 和 75% 当前 target。
+  high_entropy_ema_alpha: 0.25
+
+  # 只使用跨 epoch 相对稳定性计算反向权重，不使用 margin。
+  weighting_signal: stability
+  # 沿用现有字段名：值大于 1 时对不稳定样本反向加权。
+  # w_i = 1.25 + (1 - 1.25) * S_i，权重范围为 [1.0, 1.25]。
+  minimum_weight: 1.25
+
+checkpoint:
+  # 与所有 QD pre15 对照实验使用同一个预训练 checkpoint。
+  pretrain_path: checkpoints/sttraj2vec_pretrain_paper_15ep.pt

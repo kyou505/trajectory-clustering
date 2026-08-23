@@ -1,0 +1,64 @@
+# Con-DTC Porto 细粒度数据集：分阶段 EMA + P70/A0.25 熵目标插值 + 稳定性反向加权 W1.50
+#
+# 与组合实验 W1.25 相比，唯一差异是最不稳定样本的原始权重
+# 上限由 1.25 提高到 1.50，用于验证熵目标插值下的反向加权强度。
+
+experiment:
+  name: condtc_porto_finegrained_s3_m07_entropy_p70_a025_reverse_stability_w150
+  output_root: runs
+
+data:
+  dataset: portoTimeNoiseFineGrained
+  # 论文第 6.3 节：batch size = 32。
+  batch_size: 32
+  # 仅影响 KMeans 初始化和全局目标计算的显存占用。
+  initialization_batch_size: 256
+
+model:
+  # 9 条基础路径，每条包含原始、时移和变速三个类别。
+  num_clusters: 27
+
+loss:
+  # 论文公式（14）、（19）及图 5(c)：alpha = 0.1。
+  time_loss_weight: 0.1
+  # 论文公式（18）、（19）及图 5(c)：beta = 0.5。
+  clustering_loss_weight: 0.5
+  # 两个 InfoNCE 权重为 0，温度不参与本实验优化。
+  instance_temperature: 0.5
+  cluster_temperature: 1.0
+  instance_loss_weight: 0.0
+  cluster_contrastive_loss_weight: 0.0
+
+optimizer:
+  # 论文第 6.3 节：表示层微调学习率为 5e-5。
+  representation_learning_rate: 0.00005
+  # 论文第 6.3 节：聚类层学习率为 15e-5。
+  clustering_learning_rate: 0.00015
+  weight_decay: 0.01
+
+training:
+  # 与现有 P70/A0.25 + W1.25 实验保持一致。
+  num_epochs: 6
+  seed: 42
+  log_interval: 50
+  max_initialization_batches: null
+  max_train_batches: null
+
+target_history:
+  # epoch 1～2 使用当前目标，epoch 3 起启用 EMA。
+  start_epoch: 3
+  momentum: 0.7
+
+  # P70/A0.25 熵目标插值。
+  entropy_target_mix_enabled: true
+  entropy_quantile: 0.7
+  high_entropy_ema_alpha: 0.25
+
+  # 使用跨 epoch 相对稳定性进行反向加权，不使用 margin。
+  weighting_signal: stability
+  # w_i = 1.50 + (1 - 1.50) * S_i，权重范围为 [1.0, 1.50]。
+  minimum_weight: 1.50
+
+checkpoint:
+  # 与 Porto FineGrained 其他对照实验使用同一个 pre15 checkpoint。
+  pretrain_path: checkpoints/sttraj2vec_porto_finegrained_pre15.pt
