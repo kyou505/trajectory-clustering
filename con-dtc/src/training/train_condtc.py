@@ -190,6 +190,8 @@ def train_condtc(
         batch_size=32,
         initialization_batch_size=256,
         num_clusters=12,
+        temporal_feature_enabled=False,
+        temporal_hidden_dim=64,
         time_loss_weight=0.1,
         clustering_loss_weight=2,
         instance_temperature=0.5,
@@ -254,6 +256,8 @@ def train_condtc(
         time_vocab_size=dataset.time_vocab_size,
         max_length=dataset.max_length,
         num_clusters=num_clusters,
+        temporal_feature_enabled=temporal_feature_enabled,
+        temporal_hidden_dim=temporal_hidden_dim,
     ).to(device)
     model.load_pretrained_components(
         pretrain_checkpoint_path,
@@ -537,6 +541,8 @@ def train_condtc(
                     "max_length": dataset.max_length,
                     "batch_size": batch_size,
                     "num_clusters": num_clusters,
+                    "temporal_feature_enabled": temporal_feature_enabled,
+                    "temporal_hidden_dim": temporal_hidden_dim,
                     "time_loss_weight": time_loss_weight,
                     "clustering_loss_weight": clustering_loss_weight,
                     "instance_temperature": instance_temperature,

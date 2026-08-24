@@ -1,0 +1,104 @@
+# Con-DTC 青岛数据集：pre15 时间特征编码 + 分阶段 EMA
+# + P70/A0.25 熵目标插值 + 稳定性反向加权 W1.50
+#
+# 实验目的：
+#   以 pre15 时间特征编码实验为直接对照，检验弱预训练表示条件下，
+#   时间特征编码与 EMA、熵目标插值、反向加权组合后的效果。
+#
+# 直接对照：
+#   configs/temporal_feature_encoder/condtc_qd_temporal_feature_baseline_pre15.yaml
+#
+# 相对直接对照仅新增 target_history；聚类学习率保持 15e-5，
+# 不混入此前中心跟踪诊断使用的 5e-4。
+
+experiment:
+  # 实验名称编码了预训练轮数、时间编码器和组合机制参数。
+  name: condtc_qd_temporal_feature_pre15_s3_m07_entropy_p70_a025_reverse_stability_w150
+
+  # 实验日志、checkpoint 和评估结果的保存根目录。
+  output_root: runs
+
+data:
+  # 与 QD pre15 时间特征基线使用相同的数据集。
+  dataset: qdTimeNoise0424
+
+  # 论文第 6.3 节：batch size = 32。
+  batch_size: 32
+
+  # 仅影响 KMeans 初始化和全量目标计算的推理批大小。
+  initialization_batch_size: 256
+
+model:
+  # 青岛数据集包含 12 个真实簇。
+  num_clusters: 12
+
+  # 与直接对照一致：启用轨迹级时间特征编码器。
+  temporal_feature_enabled: true
+
+  # 与直接对照一致：时间特征 MLP 隐藏维度为 64。
+  temporal_hidden_dim: 64
+
+loss:
+  # 论文公式（14）、（19）及图 5(c)：时间损失权重 alpha = 0.1。
+  time_loss_weight: 0.1
+
+  # 论文公式（18）、（19）及图 5(c)：聚类损失权重 beta = 0.5。
+  clustering_loss_weight: 0.5
+
+  # 论文目标不包含当前实现额外提供的两个 InfoNCE 损失，因此权重为 0。
+  instance_temperature: 0.5
+  cluster_temperature: 1.0
+  instance_loss_weight: 0.0
+  cluster_contrastive_loss_weight: 0.0
+
+optimizer:
+  # 与 pre15 时间特征基线一致：表示层及时间编码器使用 5e-5。
+  representation_learning_rate: 0.00005
+
+  # 与 pre15 时间特征基线一致：聚类中心学习率为 15e-5。
+  clustering_learning_rate: 0.00015
+
+  # 与 baseline 一致：AdamW weight decay。
+  weight_decay: 0.01
+
+training:
+  # 与直接对照及现有 S3/M0.7 系列一致，训练 6 个 epoch。
+  num_epochs: 6
+
+  # 首轮使用与直接对照相同的种子，进行严格配对比较。
+  seed: 19721013
+
+  # 仅控制终端日志打印频率，不影响优化。
+  log_interval: 50
+
+  # null 表示正式实验使用全部数据。
+  max_initialization_batches: null
+  max_train_batches: null
+
+target_history:
+  # epoch 1～2 使用当前跨视图目标，epoch 3 起启用历史 EMA。
+  start_epoch: 3
+
+  # 历史软聚类分布的 EMA momentum。
+  momentum: 0.7
+
+  # 启用基于当前软分配熵的 EMA/current target 插值。
+  entropy_target_mix_enabled: true
+
+  # 使用当前 epoch 熵分布的 P70，将熵最高的约 30% 视为高熵样本。
+  entropy_quantile: 0.7
+
+  # 高熵样本使用 25% EMA target 和 75% 当前 DEC target。
+  high_entropy_ema_alpha: 0.25
+
+  # 反向加权仅依据跨 epoch 相对稳定性，不使用 margin。
+  weighting_signal: stability
+
+  # 值大于 1 时形成反向加权：权重范围为 [1.0, 1.50]。
+  # 不稳定样本权重更高，稳定样本权重接近 1.0。
+  minimum_weight: 1.50
+
+checkpoint:
+  # 与 pre15 时间特征基线使用同一个预训练 checkpoint。
+  # 时间特征 MLP 不在该 checkpoint 中，将在 DEC 阶段随机初始化并训练。
+  pretrain_path: checkpoints/sttraj2vec_pretrain_paper_15ep.pt

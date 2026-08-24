@@ -10,6 +10,9 @@ from src.models.encoder import (
     TrajectoryEncoder,
     mask_mean_pooling,
 )
+from src.models.temporal_feature_encoder import (
+    TemporalFeatureEncoder,
+)
 
 
 class ContrastiveTrajectoryModel(nn.Module):
@@ -24,6 +27,8 @@ class ContrastiveTrajectoryModel(nn.Module):
             dim_feedforward=1024,
             dropout=0.1,
             num_clusters=12,
+            temporal_feature_enabled=False,
+            temporal_hidden_dim=64,
     ):
         super().__init__()
         self.encoder = TrajectoryEncoder(
@@ -36,6 +41,12 @@ class ContrastiveTrajectoryModel(nn.Module):
             dim_feedforward=dim_feedforward,
             dropout=dropout,
         )
+        self.temporal_feature_enabled = temporal_feature_enabled
+        if temporal_feature_enabled:
+            self.temporal_feature_encoder = TemporalFeatureEncoder(
+                output_dim=d_model,
+                hidden_dim=temporal_hidden_dim,
+            )
         self.clustering_layer = DECClusteringLayer(
             num_clusters=num_clusters,
             embedding_dim=d_model,
@@ -71,6 +82,12 @@ class ContrastiveTrajectoryModel(nn.Module):
             hidden_states=hidden_states,
             pooling_mask=view["pooling_mask"],
         )
+        if self.temporal_feature_enabled:
+            temporal_vector = self.temporal_feature_encoder(
+                time_ids=view["time_ids"],
+                pooling_mask=view["pooling_mask"],
+            )
+            trajectory_vector = trajectory_vector + temporal_vector
         return trajectory_vector
 
     def forward(self, view1, view2):
@@ -139,6 +156,12 @@ class ContrastiveTrajectoryModel(nn.Module):
             "cluster_projector.2.weight",
             "cluster_projector.2.bias",
         }
+        if self.temporal_feature_enabled:
+            expected_missing.update({
+                f"temporal_feature_encoder.{key}"
+                for key in self.temporal_feature_encoder.state_dict()
+            })
+
         if missing_keys != expected_missing:
             raise RuntimeError(f"unexpected missing keys: {missing_keys}")
 

@@ -147,6 +147,8 @@ def main():
                 batch_size=config.data.batch_size,
                 initialization_batch_size=config.data.initialization_batch_size,
                 num_clusters=config.model.num_clusters,
+                temporal_feature_enabled=config.model.temporal_feature_enabled,
+                temporal_hidden_dim=config.model.temporal_hidden_dim,
                 time_loss_weight=config.loss.time_loss_weight,
                 clustering_loss_weight=config.loss.clustering_loss_weight,
                 instance_temperature=config.loss.instance_temperature,

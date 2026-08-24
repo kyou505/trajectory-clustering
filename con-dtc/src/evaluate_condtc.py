@@ -118,6 +118,8 @@ def evaluate_checkpoint(
         ),
         max_length=config.get("max_length", dataset.max_length),
         num_clusters=config["num_clusters"],
+        temporal_feature_enabled=config.get("temporal_feature_enabled", False),
+        temporal_hidden_dim=config.get("temporal_hidden_dim", 64),
     ).to(device)
     model.load_state_dict(
         checkpoint["model_state_dict"],

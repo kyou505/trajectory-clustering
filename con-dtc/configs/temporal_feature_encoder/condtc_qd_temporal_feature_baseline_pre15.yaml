@@ -1,0 +1,79 @@
+# Con-DTC 青岛数据集：轨迹级时间特征编码实验
+#
+# 实验目的：
+#   在 QD pre15 baseline 上仅增加轨迹级时间特征编码器，验证显式的
+#   起始时间、持续时长和点间时间间隔是否能改善细粒度时间变体的表示。
+#
+# 对照配置：configs/baseline/condtc_qd_baseline_pre15.yaml
+# 唯一算法差异：model.temporal_feature_enabled = true。
+# 本实验不启用 EMA、熵目标插值或 DEC 样本加权，避免混合不同机制。
+
+experiment:
+  # 实现设置：用于区分原始 pre15 baseline 与时间特征编码实验。
+  name: condtc_qd_temporal_feature_baseline_pre15
+
+  # 实现设置：实验日志、checkpoint 和评估结果的保存根目录。
+  output_root: runs
+
+data:
+  # 与 QD pre15 baseline 使用相同的数据集。
+  dataset: qdTimeNoise0424
+
+  # 论文第 6.3 节：batch size = 32。
+  batch_size: 32
+
+  # 仅影响 KMeans 初始化和全量目标计算的推理批大小。
+  initialization_batch_size: 256
+
+model:
+  # 青岛数据集包含 12 个真实簇。
+  num_clusters: 12
+
+  # 本实验唯一新增模块：启用轨迹级时间特征编码器。
+  temporal_feature_enabled: true
+
+  # 时间特征 MLP 的隐藏维度；第一版固定为 64，不进行参数搜索。
+  temporal_hidden_dim: 64
+
+loss:
+  # 论文公式（14）、（19）及图 5(c)：时间预测损失权重 alpha = 0.1。
+  time_loss_weight: 0.1
+
+  # 论文公式（18）、（19）及图 5(c)：聚类损失权重 beta = 0.5。
+  clustering_loss_weight: 0.5
+
+  # 两个额外 InfoNCE 损失权重为 0，温度字段不会参与本实验优化。
+  instance_temperature: 0.5
+  cluster_temperature: 1.0
+  instance_loss_weight: 0.0
+  cluster_contrastive_loss_weight: 0.0
+
+optimizer:
+  # 与 baseline 一致：表示层微调学习率为 5e-5。
+  # 新增时间特征编码器也归入表示层参数组，使用相同学习率。
+  representation_learning_rate: 0.00005
+
+  # 与 baseline 一致：聚类中心学习率为 15e-5。
+  clustering_learning_rate: 0.00015
+
+  # 与 baseline 一致：AdamW weight decay。
+  weight_decay: 0.01
+
+training:
+  # 与 QD pre15 baseline 一致，训练 6 个 epoch。
+  num_epochs: 6
+
+  # 首轮先使用与 baseline 已有实验对应的随机种子。
+  seed: 19721013
+
+  # 仅控制终端日志打印频率，不影响优化。
+  log_interval: 50
+
+  # null 表示正式实验使用全部数据。
+  max_initialization_batches: null
+  max_train_batches: null
+
+checkpoint:
+  # 与 QD pre15 baseline 使用同一个预训练 checkpoint。
+  # 新增时间特征 MLP 不在该 checkpoint 中，将在 DEC 阶段随机初始化并训练。
+  pretrain_path: checkpoints/sttraj2vec_pretrain_paper_15ep.pt

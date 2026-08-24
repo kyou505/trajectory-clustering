@@ -21,6 +21,8 @@ class DataConfig:
 @dataclass(frozen=True)
 class ModelConfig:
     num_clusters: int
+    temporal_feature_enabled: bool = False
+    temporal_hidden_dim: int = 64
 
 
 @dataclass(frozen=True)
@@ -174,6 +176,11 @@ def validate_experiment_config(config):
 
     if config.model.num_clusters < 2:
         raise ValueError("num_clusters must be at least 2")
+
+    if config.model.temporal_hidden_dim <= 0:
+        raise ValueError(
+            "model.temporal_hidden_dim must be positive"
+        )
 
     if config.training.num_epochs <= 0:
         raise ValueError("num_epochs must be positive")
