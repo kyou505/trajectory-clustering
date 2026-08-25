@@ -75,6 +75,10 @@ class TemporalFeatureEncoder(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden_dim, output_dim),
         )
+        # 初始时让时间分支输出为 0，
+        # 避免扰动预训练表示和 K-means 初始化
+        nn.init.zeros_(self.network[-1].weight)
+        nn.init.zeros_(self.network[-1].bias)
 
     def forward(self, time_ids, pooling_mask):
         temporal_features = extract_temporal_features(
