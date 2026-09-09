@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import math
 from pathlib import Path
 from typing import Optional
 
@@ -31,6 +32,12 @@ class LossConfig:
     cluster_temperature: float
     instance_loss_weight: float
     cluster_contrastive_loss_weight: float
+    # 设为 0 时，同时禁用历史编码器推理和额外的对比损失。
+    history_instance_loss_weight: float = 0.0
+    history_instance_temperature: float = 0.5
+    history_instance_start_epoch: int = 3
+    # 设为 None 时，沿用直接保存上一轮在线编码器快照的方式。
+    history_encoder_ema_momentum: Optional[float] = None
 
 
 @dataclass(frozen=True)
@@ -191,6 +198,14 @@ def validate_experiment_config(config):
             "cluster_temperature must be positive"
         )
 
+    validate_history_instance_config(
+        config.loss.history_instance_loss_weight,
+        config.loss.history_instance_temperature,
+        config.loss.history_instance_start_epoch,
+        config.training.num_epochs,
+        config.loss.history_encoder_ema_momentum,
+    )
+
     if config.optimizer.representation_learning_rate <= 0:
         raise ValueError(
             "representation_learning_rate must be positive"
@@ -242,3 +257,20 @@ def validate_experiment_config(config):
             raise ValueError(
                 f"{name} must be positive or null"
             )
+
+
+def validate_history_instance_config(weight, temperature, start_epoch, num_epochs,
+                                     encoder_ema_momentum=None):
+    if not math.isfinite(weight) or weight < 0:
+        raise ValueError("history_instance_loss_weight must be finite and nonnegative")
+    if not math.isfinite(temperature) or temperature <= 0:
+        raise ValueError("history_instance_temperature must be finite and positive")
+    if isinstance(start_epoch, bool) or not isinstance(start_epoch, int) or start_epoch < 1:
+        raise ValueError("history_instance_start_epoch must be a positive integer")
+    if weight > 0 and start_epoch > num_epochs:
+        raise ValueError("history_instance_start_epoch must not exceed num_epochs when enabled")
+    if encoder_ema_momentum is not None:
+        if (isinstance(encoder_ema_momentum, bool)
+                or not math.isfinite(encoder_ema_momentum)
+                or not 0 <= encoder_ema_momentum < 1):
+            raise ValueError("history_encoder_ema_momentum must be null or finite in [0, 1)")

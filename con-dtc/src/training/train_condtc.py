@@ -1,9 +1,12 @@
 from pathlib import Path
+import json
 
 import torch
 
 from torch.utils.data import DataLoader
 from src.models.condtc_loss import ConDTCTotalLoss
+from src.models.historical_encoder import HistoricalEncoder, EMATargetEncoder
+from src.experiment.experiment_config import validate_history_instance_config
 from src.data.data_loader import (
     create_contrastive_data_loader,
 )
@@ -85,6 +88,8 @@ def train_one_step(
         global_p1,
         global_p2,
         global_sample_weight,
+        history_encoder=None,
+        ema_target_encoder=None,
 ):
     model.train()
     indices = batch["index"].long()
@@ -102,6 +107,12 @@ def train_one_step(
         view1=batch["view1"],
         view2=batch["view2"],
     )
+    history_enabled = history_encoder is not None and criterion.history_instance_loss_weight > 0
+    history_z1 = history_z2 = None
+    if history_enabled:
+        # 直接复用当前批次的两个视图，不重新生成增强样本。
+        history_z1 = history_encoder(batch["view1"])
+        history_z2 = history_encoder(batch["view2"])
     losses = criterion(
         location_logits=mstm_output["location_logits"],
         time_logits=mstm_output["time_logits"],
@@ -116,6 +127,11 @@ def train_one_step(
         head_cl1=cluster_output["head_cl1"],
         head_cl2=cluster_output["head_cl2"],
         sample_weight=sample_weight_batch,
+        z1=cluster_output["z1"],
+        z2=cluster_output["z2"],
+        history_z1=history_z1,
+        history_z2=history_z2,
+        history_contrastive_enabled=history_enabled,
     )
     if not torch.isfinite(losses["loss"]):
         raise RuntimeError("Loss is not finite")
@@ -125,6 +141,8 @@ def train_one_step(
         max_norm=1.0
     )
     optimizer.step()
+    if ema_target_encoder is not None and criterion.history_instance_loss_weight > 0:
+        ema_target_encoder.update(model.encoder)
     return {
         name: value.detach().item()
         for name, value in losses.items()
@@ -141,6 +159,8 @@ def train_one_epoch(
         global_sample_weight,
         max_batches=None,
         log_interval=50,
+        history_encoder=None,
+        ema_target_encoder=None,
 ):
     model.train()
     metrics_sums = {}
@@ -160,6 +180,8 @@ def train_one_epoch(
             global_p1=global_p1,
             global_p2=global_p2,
             global_sample_weight=global_sample_weight,
+            history_encoder=history_encoder,
+            ema_target_encoder=ema_target_encoder,
         )
         for name, value in metrics.items():
             metrics_sums[name] = metrics_sums.get(name, 0.0) + value * batch_size
@@ -173,6 +195,8 @@ def train_one_epoch(
                 f"clustering_loss={metrics['clustering_loss']:.4f} "
                 f"instance_nce={metrics['instance_contrastive_loss']:.4f} "
                 f"cluster_nce={metrics['cluster_contrastive_loss']:.4f} "
+                f"history_nce={metrics['history_instance_loss']:.4f} "
+                f"history_nce_weighted={metrics['history_instance_weighted_loss']:.4f} "
             )
     if process_batches == 0:
         raise RuntimeError("No batches were processed")
@@ -218,15 +242,31 @@ def train_condtc(
         target_high_entropy_ema_alpha=0.5,
         output_dir=None,
         pretrain_checkpoint_path=None,
+        history_instance_loss_weight=0.0,
+        history_instance_temperature=0.5,
+        history_instance_start_epoch=3,
+        history_encoder_ema_momentum=None,
 ):
     if output_dir is None:
         raise ValueError("output_dir is required")
+    validate_history_instance_config(
+        history_instance_loss_weight, history_instance_temperature,
+        history_instance_start_epoch, num_epochs,
+        history_encoder_ema_momentum,
+    )
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
     device = get_device()
     print("device:", device)
     print("dataset:", dataset_name)
+    print(
+        f"historical instance contrast: weight={history_instance_loss_weight} "
+        f"temperature={history_instance_temperature} start_epoch={history_instance_start_epoch} "
+        "anchor_weighting=uniform checkpoint_selection=base_loss"
+    )
+    print(f"history_encoder_ema_momentum={history_encoder_ema_momentum} "
+          "ema_update_timing=after_optimizer_step_including_warmup")
     project_dir = Path(__file__).resolve().parents[2]
     if pretrain_checkpoint_path is None:
         pretrain_checkpoint_path = project_dir / "checkpoints" / "sttraj2vec_pretrain_best.pt"
@@ -300,6 +340,8 @@ def train_condtc(
         cluster_temperature=cluster_temperature,
         instance_loss_weight=instance_loss_weight,
         cluster_contrastive_loss_weight=cluster_contrastive_loss_weight,
+        history_instance_loss_weight=history_instance_loss_weight,
+        history_instance_temperature=history_instance_temperature,
     )
     train_loader = create_contrastive_data_loader(
         batch_size=batch_size,
@@ -324,8 +366,31 @@ def train_condtc(
     )
     best_train_loss = float("inf")
     history = []
+    history_encoder = None
+    # 即使稍后才启用对比损失，也在第 1 轮开始前用预训练参数初始化。
+    # 深拷贝和 EMA 算术更新均不消耗随机数，也不使用在线模型的梯度。
+    ema_target_encoder = (
+        EMATargetEncoder(model.encoder, momentum=history_encoder_ema_momentum)
+        if history_instance_loss_weight > 0 and history_encoder_ema_momentum is not None
+        else None
+    )
     for epoch in range(1, num_epochs + 1):
         print(f"epoch={epoch} / num_epochs={num_epochs}")
+        history_enabled = history_instance_loss_weight > 0 and epoch >= history_instance_start_epoch
+        if history_enabled:
+            # 目标编码器已完成截至上一轮结束的所有更新。
+            # 单独冻结一份快照，避免轮内各批次的 EMA 更新改变历史参照。
+            source_encoder = ema_target_encoder.encoder if ema_target_encoder is not None else model.encoder
+            if history_encoder is None:
+                history_encoder = HistoricalEncoder(source_encoder, source_epoch=epoch - 1)
+            else:
+                history_encoder.refresh(source_encoder, source_epoch=epoch - 1)
+        history_source_epoch = history_encoder.source_epoch if history_enabled else None
+        history_encoder_source = ("ema_target" if ema_target_encoder is not None else "online") if history_enabled else None
+        ema_updates_start = ema_target_encoder.num_updates if ema_target_encoder is not None else 0
+        history_source_ema_updates = ema_updates_start if history_enabled and ema_target_encoder is not None else None
+        print(f"history_contrast_enabled={history_enabled} history_source_epoch={history_source_epoch}")
+        print(f"history_encoder_source={history_encoder_source} encoder_ema_updates_start={ema_updates_start}")
         # 是否开启ema，target_ema_start_epoch控制开启的时机，默认直接开始，可分阶段开始
         ema_enabled = target_ema_enabled and epoch >= target_ema_start_epoch
         # 是否进行DEC加权effective_minimum_weight
@@ -451,7 +516,17 @@ def train_condtc(
             global_sample_weight=train_sample_weight,
             max_batches=max_train_batches,
             log_interval=log_interval,
+            history_encoder=history_encoder if history_enabled else None,
+            ema_target_encoder=ema_target_encoder,
         )
+        encoder_history_metadata = {
+            "history_encoder_source": history_encoder_source,
+            "history_encoder_ema_momentum": history_encoder_ema_momentum,
+            "history_source_ema_updates": history_source_ema_updates,
+            "encoder_ema_updates_start": ema_updates_start,
+            "encoder_ema_updates_end": ema_target_encoder.num_updates if ema_target_encoder is not None else 0,
+        }
+        print(f"encoder_ema_updates_end={encoder_history_metadata['encoder_ema_updates_end']}")
         # epoch_embeddings, epoch_labels = (
         #     extract_trajectory_embeddings(
         #         model=model,
@@ -483,12 +558,21 @@ def train_condtc(
             f"mstm={train_metrics['representation_loss']:.4f} "
             f"instance_nce={train_metrics['instance_contrastive_loss']:.4f} "
             f"cluster_nce={train_metrics['cluster_contrastive_loss']:.4f} "
+            f"history_nce={train_metrics['history_instance_loss']:.4f} "
+            f"history_nce_1to2={train_metrics['history_instance_loss_view1_to_history2']:.4f} "
+            f"history_nce_2to1={train_metrics['history_instance_loss_view2_to_history1']:.4f} "
+            f"history_nce_weighted={train_metrics['history_instance_weighted_loss']:.4f} "
+            f"history_applied_fraction={train_metrics['history_instance_applied']:.4f} "
+            f"base_loss={train_metrics['base_loss']:.4f} "
             f"dec={train_metrics['clustering_loss']:.4f}"
         )
         
         torch.save(
             {
                 "epoch": epoch,
+                "history_contrast_enabled": history_enabled,
+                "history_source_epoch": history_source_epoch,
+                **encoder_history_metadata,
                 "q1": current_targets["q1"],
                 "q2": current_targets["q2"],
                 "ema_q1": ema_targets["q1"],
@@ -520,9 +604,15 @@ def train_condtc(
             },
             target_history_dir / f"epoch_{epoch:03d}.pt",
         )
-        history.append({"epoch": epoch, "train": train_metrics})
-        if train_metrics["loss"] < best_train_loss:
-            best_train_loss = train_metrics["loss"]
+        history.append({"epoch": epoch, "train": train_metrics,
+                        "history_contrast_enabled": history_enabled,
+                        "history_source_epoch": history_source_epoch,
+                        **encoder_history_metadata})
+        (output_dir / "training_history.json").write_text(
+            json.dumps(history, indent=2), encoding="utf-8",
+        )
+        if train_metrics["base_loss"] < best_train_loss:
+            best_train_loss = train_metrics["base_loss"]
             torch.save({
                 "epoch": epoch,
                 "model_state_dict": model.state_dict(),
@@ -530,6 +620,11 @@ def train_condtc(
                 "train_metrics": train_metrics,
                 "kmeans_inertia": float(kmeans.inertia_),
                 "target_ema_state_dict": target_ema.state_dict(),
+                "history_encoder_state_dict": history_encoder.state_dict() if history_enabled else None,
+                "ema_target_encoder_state_dict": ema_target_encoder.state_dict() if ema_target_encoder is not None else None,
+                "history_source_epoch": history_source_epoch,
+                **encoder_history_metadata,
+                "checkpoint_selection_metric": "base_loss",
                 "configs": {
                     "dataset": dataset_name,
                     "location_vocab_size": dataset.location_vocab_size,
@@ -543,6 +638,10 @@ def train_condtc(
                     "cluster_temperature": cluster_temperature,
                     "instance_loss_weight": instance_loss_weight,
                     "cluster_contrastive_loss_weight": cluster_contrastive_loss_weight,
+                    "history_instance_loss_weight": history_instance_loss_weight,
+                    "history_instance_temperature": history_instance_temperature,
+                    "history_instance_start_epoch": history_instance_start_epoch,
+                    "history_encoder_ema_momentum": history_encoder_ema_momentum,
                     "representation_learning_rate": representation_learning_rate,
                     "clustering_learning_rate": clustering_learning_rate,
                     "weight_decay": weight_decay,
@@ -550,7 +649,7 @@ def train_condtc(
                 }
             }, output_checkpoint_path)
             print("save checkpoint: ", output_checkpoint_path)
-    print("best train_loss: ", best_train_loss)
+    print("best base train_loss: ", best_train_loss)
     return model, history, output_checkpoint_path
 
 def compute_effective_minimum_weight(
