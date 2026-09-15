@@ -166,6 +166,9 @@ def main():
                 log_interval=config.training.log_interval,
                 output_dir=run_dir,
                 pretrain_checkpoint_path=config.checkpoint.pretrain_path,
+                save_representation_history=config.training.save_representation_history,
+                lfss_config=config.lfss,
+                checkpoint_selection=config.training.checkpoint_selection,
                 **target_history_kwargs,
             )
 

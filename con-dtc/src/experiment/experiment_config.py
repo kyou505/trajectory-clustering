@@ -54,6 +54,10 @@ class TrainingConfig:
     log_interval: int
     max_initialization_batches: Optional[int]
     max_train_batches: Optional[int]
+    # 仅用于离线诊断，不把历史表示或真实标签用于优化。
+    save_representation_history: bool = False
+    # 默认保持旧配置按基础损失选 best；固定训练预算的对照可选 last。
+    checkpoint_selection: str = "best"
 
 
 @dataclass(frozen=True)
@@ -85,6 +89,46 @@ class TargetHistoryConfig:
 
 
 @dataclass(frozen=True)
+class LFSSConfig:
+    """仅表示层 LS、LI；与 DART 的软分配 EMA 独立，不接入 LC。"""
+    enabled: bool = True
+    noise_weight: float = 1.0
+    instance_weight: float = 0.1
+    target_momentum: float = 0.996
+    temperature: float = 0.5
+    noise_std: float = 0.001
+    projection_dim: int = 256
+    hidden_dim: int = 4096
+
+
+def validate_lfss_config(config, history_instance_loss_weight=0.0):
+    if config is None:
+        return
+    if not isinstance(config.enabled, bool):
+        raise ValueError("lfss.enabled 必须是布尔值")
+    for name in ("noise_weight", "instance_weight", "noise_std"):
+        value = getattr(config, name)
+        if isinstance(value, bool) or not math.isfinite(value) or value < 0:
+            raise ValueError(f"lfss.{name} 必须是有限非负数")
+    if (isinstance(config.target_momentum, bool)
+            or not math.isfinite(config.target_momentum)
+            or not 0 <= config.target_momentum < 1):
+        raise ValueError("lfss.target_momentum 必须属于 [0, 1)")
+    if (isinstance(config.temperature, bool)
+            or not math.isfinite(config.temperature) or config.temperature <= 0):
+        raise ValueError("lfss.temperature 必须是有限正数")
+    for name in ("projection_dim", "hidden_dim"):
+        value = getattr(config, name)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise ValueError(f"lfss.{name} 必须是正整数")
+    if config.enabled:
+        if config.noise_weight + config.instance_weight <= 0:
+            raise ValueError("LFSS 启用时 LS、LI 至少有一项权重大于 0")
+        if history_instance_loss_weight > 0:
+            raise ValueError("LFSS 表示约束与旧版 history_instance_loss_weight 不能同时启用")
+
+
+@dataclass(frozen=True)
 class ConDTCExperimentConfig:
     experiment: ExperimentSettings
     data: DataConfig
@@ -94,6 +138,7 @@ class ConDTCExperimentConfig:
     training: TrainingConfig
     checkpoint: CheckpointConfig
     target_history: Optional[TargetHistoryConfig] = None
+    lfss: Optional[LFSSConfig] = None
 
 
 
@@ -123,6 +168,7 @@ def load_experiment_config(config_path):
 
     optional_sections = {
         "target_history",
+        "lfss",
     }
 
     actual_sections = set(raw_config)
@@ -163,11 +209,15 @@ def load_experiment_config(config_path):
             **raw_config["checkpoint"]
         ),
         target_history=target_history,
+        lfss=LFSSConfig(**raw_config["lfss"]) if raw_config.get("lfss") is not None else None,
     )
     validate_experiment_config(config)
     return config
 
 def validate_experiment_config(config):
+    validate_lfss_config(config.lfss, config.loss.history_instance_loss_weight)
+    if config.training.checkpoint_selection not in ("best", "last"):
+        raise ValueError("checkpoint_selection 必须为 best 或 last")
     if not config.experiment.name.strip():
         raise ValueError("experiment name cannot be empty")
 
@@ -187,6 +237,9 @@ def validate_experiment_config(config):
 
     if config.training.log_interval <= 0:
         raise ValueError("log_interval must be positive")
+
+    if not isinstance(config.training.save_representation_history, bool):
+        raise ValueError("save_representation_history must be a boolean")
 
     if config.loss.instance_temperature <= 0:
         raise ValueError(

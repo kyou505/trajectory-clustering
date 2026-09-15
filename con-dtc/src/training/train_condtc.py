@@ -1,4 +1,5 @@
 from pathlib import Path
+from dataclasses import asdict
 import json
 
 import torch
@@ -6,7 +7,9 @@ import torch
 from torch.utils.data import DataLoader
 from src.models.condtc_loss import ConDTCTotalLoss
 from src.models.historical_encoder import HistoricalEncoder, EMATargetEncoder
-from src.experiment.experiment_config import validate_history_instance_config
+from src.models.lfss import LFSSAuxiliary
+from src.training.representation_history import RepresentationHistory
+from src.experiment.experiment_config import validate_history_instance_config, validate_lfss_config
 from src.data.data_loader import (
     create_contrastive_data_loader,
 )
@@ -53,6 +56,7 @@ def create_optimizer(
         representation_learning_rate=5e-5,
         clustering_learning_rate=1.5e-4,
         weight_decay=0.01,
+        auxiliary=None,
 ):
     representation_parameters = []
     for name, param in model.named_parameters():
@@ -62,6 +66,8 @@ def create_optimizer(
             representation_parameters.append(param)
 
     clustering_parameters = list(model.clustering_layer.parameters())
+    if auxiliary is not None:
+        representation_parameters.extend(auxiliary.trainable_parameters())
     representation_ids = {
         id(param) for param in representation_parameters
     }
@@ -90,7 +96,10 @@ def train_one_step(
         global_sample_weight,
         history_encoder=None,
         ema_target_encoder=None,
+        auxiliary=None,
 ):
+    if auxiliary is not None and criterion.history_instance_loss_weight > 0:
+        raise ValueError("LFSS 表示约束与旧版历史实例对比不能同时启用")
     model.train()
     indices = batch["index"].long()
     p1_batch = global_p1[indices].to(device)
@@ -133,14 +142,22 @@ def train_one_step(
         history_z2=history_z2,
         history_contrastive_enabled=history_enabled,
     )
+    if auxiliary is not None:
+        extra = auxiliary(cluster_output["z1"], cluster_output["z2"],
+                          batch["view1"], batch["view2"])
+        losses.update(extra)
+        losses["loss"] = losses["loss"] + extra["lfss_loss"]
     if not torch.isfinite(losses["loss"]):
         raise RuntimeError("Loss is not finite")
     losses["loss"].backward()
     torch.nn.utils.clip_grad_norm_(
-        model.parameters(),
+        (model.parameters() if auxiliary is None else
+         [p for group in optimizer.param_groups for p in group["params"]]),
         max_norm=1.0
     )
     optimizer.step()
+    if auxiliary is not None:
+        auxiliary.update_target(model)
     if ema_target_encoder is not None and criterion.history_instance_loss_weight > 0:
         ema_target_encoder.update(model.encoder)
     return {
@@ -161,6 +178,7 @@ def train_one_epoch(
         log_interval=50,
         history_encoder=None,
         ema_target_encoder=None,
+        auxiliary=None,
 ):
     model.train()
     metrics_sums = {}
@@ -182,6 +200,7 @@ def train_one_epoch(
             global_sample_weight=global_sample_weight,
             history_encoder=history_encoder,
             ema_target_encoder=ema_target_encoder,
+            auxiliary=auxiliary,
         )
         for name, value in metrics.items():
             metrics_sums[name] = metrics_sums.get(name, 0.0) + value * batch_size
@@ -197,6 +216,8 @@ def train_one_epoch(
                 f"cluster_nce={metrics['cluster_contrastive_loss']:.4f} "
                 f"history_nce={metrics['history_instance_loss']:.4f} "
                 f"history_nce_weighted={metrics['history_instance_weighted_loss']:.4f} "
+                f"lfss_ls={metrics.get('lfss_ls', 0):.4f} "
+                f"lfss_li={metrics.get('lfss_li', 0):.4f} "
             )
     if process_batches == 0:
         raise RuntimeError("No batches were processed")
@@ -246,9 +267,15 @@ def train_condtc(
         history_instance_temperature=0.5,
         history_instance_start_epoch=3,
         history_encoder_ema_momentum=None,
+        save_representation_history=False,
+        lfss_config=None,
+        checkpoint_selection="best",
 ):
     if output_dir is None:
         raise ValueError("output_dir is required")
+    validate_lfss_config(lfss_config, history_instance_loss_weight)
+    if checkpoint_selection not in ("best", "last"):
+        raise ValueError("checkpoint_selection 必须为 best 或 last")
     validate_history_instance_config(
         history_instance_loss_weight, history_instance_temperature,
         history_instance_start_epoch, num_epochs,
@@ -263,7 +290,7 @@ def train_condtc(
     print(
         f"historical instance contrast: weight={history_instance_loss_weight} "
         f"temperature={history_instance_temperature} start_epoch={history_instance_start_epoch} "
-        "anchor_weighting=uniform checkpoint_selection=base_loss"
+        f"anchor_weighting=uniform checkpoint_selection={checkpoint_selection} best_metric=base_loss"
     )
     print(f"history_encoder_ema_momentum={history_encoder_ema_momentum} "
           "ema_update_timing=after_optimizer_step_including_warmup")
@@ -286,8 +313,6 @@ def train_condtc(
     output_checkpoint_path = checkpoint_dir / "condtc_best.pt"
     target_history_dir = output_dir / "target_history"
     target_history_dir.mkdir(parents=True, exist_ok=True)
-    representation_history_dir = output_dir / "representation_history"
-    representation_history_dir.mkdir(parents=True, exist_ok=True)
     dataset = QDTrajectoryDataset(dataset_name=dataset_name)
     model = ContrastiveTrajectoryModel(
         location_vocab_size=dataset.location_vocab_size,
@@ -318,20 +343,29 @@ def train_condtc(
         seed=seed,
         n_init=20,
     )
-    # torch.save(
-    #     {
-    #         "epoch": 0,
-    #         "embeddings": embeddings.detach().cpu(),
-    #         "labels": embedding_labels.detach().cpu(),
-    #         "cluster_centers": model.clustering_layer.cluster_centers.detach().cpu()
-    #     },
-    #     representation_history_dir / "epoch_000.pt",
-    # )
+    auxiliary = (
+        LFSSAuxiliary(model, lfss_config, seed)
+        if lfss_config is not None and lfss_config.enabled else None
+    )
+    if auxiliary is not None:
+        print("LFSS representation config:", json.dumps(asdict(lfss_config), ensure_ascii=False))
+    representation_history = None
+    if save_representation_history:
+        representation_history = RepresentationHistory(
+            output_dir=output_dir / "representation_history",
+            dataset_name=dataset_name,
+        )
+        representation_history.save(
+            model, initialization_loader, device, epoch=0,
+            phase="after_cluster_initialization",
+            projector=auxiliary.projector if auxiliary is not None else None,
+        )
     optimizer = create_optimizer(
         model=model,
         representation_learning_rate=representation_learning_rate,
         clustering_learning_rate=clustering_learning_rate,
         weight_decay=weight_decay,
+        auxiliary=auxiliary,
     )
     criterion = ConDTCTotalLoss(
         time_loss_weight=time_loss_weight,
@@ -376,6 +410,9 @@ def train_condtc(
     )
     for epoch in range(1, num_epochs + 1):
         print(f"epoch={epoch} / num_epochs={num_epochs}")
+        lfss_info = auxiliary.begin_epoch(epoch) if auxiliary is not None else None
+        if lfss_info is not None:
+            print("LFSS history:", json.dumps(lfss_info, ensure_ascii=False))
         history_enabled = history_instance_loss_weight > 0 and epoch >= history_instance_start_epoch
         if history_enabled:
             # 目标编码器已完成截至上一轮结束的所有更新。
@@ -518,7 +555,10 @@ def train_condtc(
             log_interval=log_interval,
             history_encoder=history_encoder if history_enabled else None,
             ema_target_encoder=ema_target_encoder,
+            auxiliary=auxiliary,
         )
+        if auxiliary is not None:
+            auxiliary.end_epoch(epoch)
         encoder_history_metadata = {
             "history_encoder_source": history_encoder_source,
             "history_encoder_ema_momentum": history_encoder_ema_momentum,
@@ -527,30 +567,12 @@ def train_condtc(
             "encoder_ema_updates_end": ema_target_encoder.num_updates if ema_target_encoder is not None else 0,
         }
         print(f"encoder_ema_updates_end={encoder_history_metadata['encoder_ema_updates_end']}")
-        # epoch_embeddings, epoch_labels = (
-        #     extract_trajectory_embeddings(
-        #         model=model,
-        #         loader=initialization_loader,
-        #         device=device,
-        #         max_batches=max_initialization_batches,
-        #     )
-        # )
-        # torch.save(
-        #     {
-        #         "epoch": epoch,
-        #         "embeddings": epoch_embeddings.detach().cpu(),
-        #         "labels": epoch_labels.detach().cpu(),
-        #         "cluster_centers": (
-        #             model.clustering_layer.cluster_centers
-        #             .detach()
-        #             .cpu()
-        #         ),
-        #     },
-        #     (
-        #             representation_history_dir
-        #             / f"epoch_{epoch:03d}.pt"
-        #     ),
-        # )
+        if representation_history is not None:
+            representation_history.save(
+                model, initialization_loader, device, epoch=epoch,
+                phase="after_training_epoch",
+                projector=auxiliary.projector if auxiliary is not None else None,
+            )
         
         print(
             "Train: "
@@ -564,6 +586,8 @@ def train_condtc(
             f"history_nce_weighted={train_metrics['history_instance_weighted_loss']:.4f} "
             f"history_applied_fraction={train_metrics['history_instance_applied']:.4f} "
             f"base_loss={train_metrics['base_loss']:.4f} "
+            f"lfss_ls={train_metrics.get('lfss_ls', 0):.4f} "
+            f"lfss_li={train_metrics.get('lfss_li', 0):.4f} "
             f"dec={train_metrics['clustering_loss']:.4f}"
         )
         
@@ -575,6 +599,9 @@ def train_condtc(
                 **encoder_history_metadata,
                 "q1": current_targets["q1"],
                 "q2": current_targets["q2"],
+                # q和训练目标来自轮初；本文件虽在轮末写入，不能与轮末预测混淆。
+                "assignment_phase": "before_training_epoch",
+                "cluster_centers_phase": "after_training_epoch",
                 "ema_q1": ema_targets["q1"],
                 "ema_q2": ema_targets["q2"],
                 "p1": ema_targets["p1"],
@@ -608,15 +635,18 @@ def train_condtc(
                         "history_contrast_enabled": history_enabled,
                         "history_source_epoch": history_source_epoch,
                         **encoder_history_metadata})
+        if lfss_info is not None:
+            history[-1]["lfss"] = lfss_info
         (output_dir / "training_history.json").write_text(
             json.dumps(history, indent=2), encoding="utf-8",
         )
-        if train_metrics["base_loss"] < best_train_loss:
-            best_train_loss = train_metrics["base_loss"]
-            torch.save({
+        is_best = train_metrics["base_loss"] < best_train_loss
+        if is_best or epoch == num_epochs:
+            checkpoint = {
                 "epoch": epoch,
                 "model_state_dict": model.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
+                "lfss_state_dict": auxiliary.state_dict() if auxiliary is not None else None,
                 "train_metrics": train_metrics,
                 "kmeans_inertia": float(kmeans.inertia_),
                 "target_ema_state_dict": target_ema.state_dict(),
@@ -626,6 +656,8 @@ def train_condtc(
                 **encoder_history_metadata,
                 "checkpoint_selection_metric": "base_loss",
                 "configs": {
+                    "lfss": asdict(lfss_config) if lfss_config is not None else None,
+                    "checkpoint_selection": checkpoint_selection,
                     "dataset": dataset_name,
                     "location_vocab_size": dataset.location_vocab_size,
                     "time_vocab_size": dataset.time_vocab_size,
@@ -647,10 +679,17 @@ def train_condtc(
                     "weight_decay": weight_decay,
                     "seed": seed,
                 }
-            }, output_checkpoint_path)
-            print("save checkpoint: ", output_checkpoint_path)
+            }
+            if is_best:
+                best_train_loss = train_metrics["base_loss"]
+                torch.save(checkpoint, output_checkpoint_path)
+                print("save checkpoint: ", output_checkpoint_path)
+            if epoch == num_epochs:
+                torch.save({**checkpoint, "checkpoint_selection_metric": "final_epoch"},
+                           checkpoint_dir / "condtc_last.pt")
     print("best base train_loss: ", best_train_loss)
-    return model, history, output_checkpoint_path
+    selected_checkpoint = checkpoint_dir / "condtc_last.pt" if checkpoint_selection == "last" else output_checkpoint_path
+    return model, history, selected_checkpoint
 
 def compute_effective_minimum_weight(
         epoch,
