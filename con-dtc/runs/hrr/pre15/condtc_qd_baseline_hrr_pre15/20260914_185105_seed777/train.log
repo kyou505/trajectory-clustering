@@ -1,0 +1,107 @@
+experiment initialized
+run directory: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777
+config snapshot: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/config.yaml
+device: cuda
+dataset: qdTimeNoise0424
+historical instance contrast: weight=0.0 temperature=0.5 start_epoch=3 anchor_weighting=uniform checkpoint_selection=last best_metric=base_loss
+history_encoder_ema_momentum=None ema_update_timing=after_optimizer_step_including_warmup
+pretrain checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_pretrain_paper_15ep.pt
+LFSS representation config: {"enabled": true, "noise_weight": 1.0, "instance_weight": 0.1, "target_momentum": 0.996, "temperature": 0.5, "noise_std": 0.001, "projection_dim": 256, "hidden_dim": 4096}
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/representation_history/epoch_000.pt samples=11604 cosine_previous=n/a
+epoch=1 / num_epochs=6
+LFSS history: {"training_epoch": 1, "target_epoch": 0, "instance_predecessor_epoch": 0}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=1.5250 representation_loss=0.8841 clustering_loss=0.4191 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1784 lfss_li=2.5294 
+batch=0100 loss=1.6263 representation_loss=1.0124 clustering_loss=0.4026 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1660 lfss_li=2.4659 
+batch=0150 loss=1.4338 representation_loss=0.8649 clustering_loss=0.3986 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1298 lfss_li=2.3982 
+batch=0200 loss=1.3498 representation_loss=0.8222 clustering_loss=0.3439 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1199 lfss_li=2.3575 
+batch=0250 loss=1.4609 representation_loss=0.9248 clustering_loss=0.3612 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1199 lfss_li=2.3568 
+batch=0300 loss=1.4400 representation_loss=0.8891 clustering_loss=0.3591 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1371 lfss_li=2.3429 
+batch=0350 loss=1.5343 representation_loss=1.0005 clustering_loss=0.3849 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1072 lfss_li=2.3412 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/representation_history/epoch_001.pt samples=11604 cosine_previous=0.9811998009681702
+Train: loss=1.5596 mstm=0.9543 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=1.1422 lfss_ls=0.1742 lfss_li=2.4315 dec=0.3759
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/checkpoints/condtc_best.pt
+epoch=2 / num_epochs=6
+LFSS history: {"training_epoch": 2, "target_epoch": 1, "instance_predecessor_epoch": 1}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=1.4469 representation_loss=0.9809 clustering_loss=0.3212 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1152 lfss_li=1.9019 
+batch=0100 loss=1.4045 representation_loss=0.9195 clustering_loss=0.3007 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1383 lfss_li=1.9641 
+batch=0150 loss=1.4177 representation_loss=0.9696 clustering_loss=0.2764 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1127 lfss_li=1.9726 
+batch=0200 loss=1.3898 representation_loss=0.9012 clustering_loss=0.2780 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1398 lfss_li=2.0986 
+batch=0250 loss=1.4011 representation_loss=0.9419 clustering_loss=0.2711 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1313 lfss_li=1.9231 
+batch=0300 loss=1.3339 representation_loss=0.9193 clustering_loss=0.2425 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1017 lfss_li=1.9168 
+batch=0350 loss=1.3217 representation_loss=0.8668 clustering_loss=0.2486 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1315 lfss_li=1.9919 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/representation_history/epoch_002.pt samples=11604 cosine_previous=0.9979982376098633
+Train: loss=1.3927 mstm=0.9385 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=1.0779 lfss_ls=0.1208 lfss_li=1.9400 dec=0.2787
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/checkpoints/condtc_best.pt
+epoch=3 / num_epochs=6
+LFSS history: {"training_epoch": 3, "target_epoch": 2, "instance_predecessor_epoch": 2}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=1.3971 representation_loss=0.9721 clustering_loss=0.2661 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1041 lfss_li=1.8780 
+batch=0100 loss=1.4443 representation_loss=1.0036 clustering_loss=0.2864 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1146 lfss_li=1.8284 
+batch=0150 loss=1.3664 representation_loss=0.9427 clustering_loss=0.2531 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1112 lfss_li=1.8589 
+batch=0200 loss=1.3134 representation_loss=0.8626 clustering_loss=0.2510 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1379 lfss_li=1.8742 
+batch=0250 loss=1.5234 representation_loss=1.0132 clustering_loss=0.2515 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1936 lfss_li=1.9093 
+batch=0300 loss=1.3035 representation_loss=0.8636 clustering_loss=0.2302 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1317 lfss_li=1.9312 
+batch=0350 loss=1.4118 representation_loss=1.0100 clustering_loss=0.2290 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1025 lfss_li=1.8483 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/representation_history/epoch_003.pt samples=11604 cosine_previous=0.9986149668693542
+Train: loss=1.3745 mstm=0.9301 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=1.0619 lfss_ls=0.1252 lfss_li=1.8746 dec=0.2634
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/checkpoints/condtc_best.pt
+epoch=4 / num_epochs=6
+LFSS history: {"training_epoch": 4, "target_epoch": 3, "instance_predecessor_epoch": 3}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=1.3308 representation_loss=0.9028 clustering_loss=0.2530 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1129 lfss_li=1.8855 
+batch=0100 loss=1.5924 representation_loss=1.1156 clustering_loss=0.2963 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1479 lfss_li=1.8073 
+batch=0150 loss=1.4996 representation_loss=1.0388 clustering_loss=0.2475 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1578 lfss_li=1.7922 
+batch=0200 loss=1.3718 representation_loss=0.9566 clustering_loss=0.2530 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1081 lfss_li=1.8065 
+batch=0250 loss=1.5335 representation_loss=1.1048 clustering_loss=0.2506 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1222 lfss_li=1.8123 
+batch=0300 loss=1.2531 representation_loss=0.7726 clustering_loss=0.2756 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1552 lfss_li=1.8744 
+batch=0350 loss=1.4629 representation_loss=1.0216 clustering_loss=0.2432 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1407 lfss_li=1.7899 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/representation_history/epoch_004.pt samples=11604 cosine_previous=0.9989080429077148
+Train: loss=1.3607 mstm=0.9251 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=1.0531 lfss_ls=0.1237 lfss_li=1.8397 dec=0.2560
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/checkpoints/condtc_best.pt
+epoch=5 / num_epochs=6
+LFSS history: {"training_epoch": 5, "target_epoch": 4, "instance_predecessor_epoch": 4}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=1.3374 representation_loss=0.9427 clustering_loss=0.2379 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1001 lfss_li=1.7562 
+batch=0100 loss=1.3129 representation_loss=0.8643 clustering_loss=0.2647 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1335 lfss_li=1.8269 
+batch=0150 loss=1.3249 representation_loss=0.8750 clustering_loss=0.2576 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1383 lfss_li=1.8282 
+batch=0200 loss=1.2618 representation_loss=0.8315 clustering_loss=0.2689 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1182 lfss_li=1.7761 
+batch=0250 loss=1.3707 representation_loss=0.9847 clustering_loss=0.2177 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1001 lfss_li=1.7711 
+batch=0300 loss=1.4235 representation_loss=0.9849 clustering_loss=0.2362 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1363 lfss_li=1.8416 
+batch=0350 loss=1.2334 representation_loss=0.8362 clustering_loss=0.2509 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0962 lfss_li=1.7555 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/representation_history/epoch_005.pt samples=11604 cosine_previous=0.9983898997306824
+Train: loss=1.3330 mstm=0.9121 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=1.0349 lfss_ls=0.1161 lfss_li=1.8197 dec=0.2456
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/checkpoints/condtc_best.pt
+epoch=6 / num_epochs=6
+LFSS history: {"training_epoch": 6, "target_epoch": 5, "instance_predecessor_epoch": 5}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=1.4076 representation_loss=0.9061 clustering_loss=0.2614 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1809 lfss_li=1.8991 
+batch=0100 loss=1.2717 representation_loss=0.8620 clustering_loss=0.2497 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1055 lfss_li=1.7939 
+batch=0150 loss=1.3814 representation_loss=0.9790 clustering_loss=0.2471 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0994 lfss_li=1.7952 
+batch=0200 loss=1.1979 representation_loss=0.7717 clustering_loss=0.2225 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1293 lfss_li=1.8569 
+batch=0250 loss=1.2837 representation_loss=0.8773 clustering_loss=0.2337 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1099 lfss_li=1.7966 
+batch=0300 loss=1.4558 representation_loss=0.9954 clustering_loss=0.2308 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1671 lfss_li=1.7794 
+batch=0350 loss=1.4160 representation_loss=1.0173 clustering_loss=0.2401 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1035 lfss_li=1.7511 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/representation_history/epoch_006.pt samples=11604 cosine_previous=0.9988043904304504
+Train: loss=1.3128 mstm=0.9056 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=1.0239 lfss_ls=0.1084 lfss_li=1.8046 dec=0.2367
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/checkpoints/condtc_best.pt
+best base train_loss:  1.0239385934337917
+evaluating: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/checkpoints/condtc_last.pt
+device: cuda
+dataset: qdTimeNoise0424
+cluster counts: tensor([ 980, 1019, 1778,  968, 1003,  879, 1000,  933,  944,  884, 1037,  179])
+metrics: {'uacc': 0.8535849706997587, 'nmi': 0.9011180749835312, 'ri': 0.9679680096759675, 'ari': 0.800789392065304}
+metrics saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_qd_baseline_hrr_pre15/20260914_185105_seed777/metrics.json

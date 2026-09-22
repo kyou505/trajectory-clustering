@@ -1,0 +1,169 @@
+experiment initialized
+run directory: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777
+config snapshot: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/config.yaml
+device: cuda
+dataset: portoTimeNoiseFineGrained
+historical instance contrast: weight=0.0 temperature=0.5 start_epoch=3 anchor_weighting=uniform checkpoint_selection=last best_metric=base_loss
+history_encoder_ema_momentum=None ema_update_timing=after_optimizer_step_including_warmup
+pretrain checkpoint: /root/trajectory-clustering/con-dtc/checkpoints/sttraj2vec_porto_finegrained_pre15.pt
+LFSS representation config: {"enabled": true, "noise_weight": 1.0, "instance_weight": 0.1, "target_momentum": 0.996, "temperature": 0.5, "noise_std": 0.001, "projection_dim": 256, "hidden_dim": 4096}
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/representation_history/epoch_000.pt samples=27305 cosine_previous=n/a
+epoch=1 / num_epochs=6
+LFSS history: {"training_epoch": 1, "target_epoch": 0, "instance_predecessor_epoch": 0}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=1.4370 representation_loss=0.7441 clustering_loss=0.5852 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1608 lfss_li=2.3953 
+batch=0100 loss=1.2306 representation_loss=0.6409 clustering_loss=0.5078 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1095 lfss_li=2.2634 
+batch=0150 loss=1.2927 representation_loss=0.7327 clustering_loss=0.4413 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.1130 lfss_li=2.2626 
+batch=0200 loss=1.1181 representation_loss=0.5893 clustering_loss=0.4557 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0789 lfss_li=2.2201 
+batch=0250 loss=1.0936 representation_loss=0.5925 clustering_loss=0.3938 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0840 lfss_li=2.2019 
+batch=0300 loss=1.1609 representation_loss=0.6768 clustering_loss=0.3850 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0697 lfss_li=2.2196 
+batch=0350 loss=1.0266 representation_loss=0.5365 clustering_loss=0.4323 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0553 lfss_li=2.1875 
+batch=0400 loss=1.1354 representation_loss=0.6592 clustering_loss=0.3368 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0824 lfss_li=2.2541 
+batch=0450 loss=1.1936 representation_loss=0.7311 clustering_loss=0.3529 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0623 lfss_li=2.2365 
+batch=0500 loss=1.1669 representation_loss=0.6579 clustering_loss=0.4256 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0746 lfss_li=2.2157 
+batch=0550 loss=1.0693 representation_loss=0.6288 clustering_loss=0.3680 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0385 lfss_li=2.1799 
+batch=0600 loss=1.1362 representation_loss=0.6707 clustering_loss=0.4242 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0382 lfss_li=2.1515 
+batch=0650 loss=0.9674 representation_loss=0.5529 clustering_loss=0.3256 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0341 lfss_li=2.1763 
+batch=0700 loss=1.0655 representation_loss=0.6109 clustering_loss=0.3522 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0570 lfss_li=2.2148 
+batch=0750 loss=1.1751 representation_loss=0.7439 clustering_loss=0.3479 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0389 lfss_li=2.1840 
+batch=0800 loss=1.1716 representation_loss=0.7365 clustering_loss=0.3516 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0387 lfss_li=2.2061 
+batch=0850 loss=1.0324 representation_loss=0.5990 clustering_loss=0.3709 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0304 lfss_li=2.1757 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/representation_history/epoch_001.pt samples=27305 cosine_previous=0.9845452308654785
+Train: loss=1.1888 mstm=0.6826 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=0.8875 lfss_ls=0.0791 lfss_li=2.2216 dec=0.4099
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/checkpoints/condtc_best.pt
+epoch=2 / num_epochs=6
+LFSS history: {"training_epoch": 2, "target_epoch": 1, "instance_predecessor_epoch": 1}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=1.1643 representation_loss=0.7739 clustering_loss=0.3756 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0349 lfss_li=1.6773 
+batch=0100 loss=1.0984 representation_loss=0.7272 clustering_loss=0.3555 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0279 lfss_li=1.6563 
+batch=0150 loss=1.0385 representation_loss=0.6516 clustering_loss=0.3718 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0287 lfss_li=1.7223 
+batch=0200 loss=0.9952 representation_loss=0.6174 clustering_loss=0.3349 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0345 lfss_li=1.7597 
+batch=0250 loss=1.1087 representation_loss=0.7401 clustering_loss=0.3546 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0228 lfss_li=1.6851 
+batch=0300 loss=1.0342 representation_loss=0.6850 clustering_loss=0.3187 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0218 lfss_li=1.6809 
+batch=0350 loss=0.9445 representation_loss=0.5782 clustering_loss=0.3249 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0326 lfss_li=1.7121 
+batch=0400 loss=1.0464 representation_loss=0.6601 clustering_loss=0.3298 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0479 lfss_li=1.7348 
+batch=0450 loss=0.9707 representation_loss=0.5959 clustering_loss=0.3090 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0396 lfss_li=1.8073 
+batch=0500 loss=0.9994 representation_loss=0.6399 clustering_loss=0.3230 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0246 lfss_li=1.7335 
+batch=0550 loss=1.0975 representation_loss=0.7319 clustering_loss=0.3148 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0330 lfss_li=1.7531 
+batch=0600 loss=1.0704 representation_loss=0.7271 clustering_loss=0.3127 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0195 lfss_li=1.6744 
+batch=0650 loss=1.0803 representation_loss=0.7392 clustering_loss=0.2873 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0269 lfss_li=1.7056 
+batch=0700 loss=0.9296 representation_loss=0.5865 clustering_loss=0.2918 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0247 lfss_li=1.7240 
+batch=0750 loss=1.1059 representation_loss=0.7440 clustering_loss=0.3007 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0326 lfss_li=1.7891 
+batch=0800 loss=1.0203 representation_loss=0.6589 clustering_loss=0.3061 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0307 lfss_li=1.7755 
+batch=0850 loss=1.0196 representation_loss=0.6513 clustering_loss=0.2957 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0421 lfss_li=1.7841 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/representation_history/epoch_002.pt samples=27305 cosine_previous=0.9985284209251404
+Train: loss=1.0295 mstm=0.6671 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=0.8267 lfss_ls=0.0299 lfss_li=1.7291 dec=0.3194
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/checkpoints/condtc_best.pt
+epoch=3 / num_epochs=6
+LFSS history: {"training_epoch": 3, "target_epoch": 2, "instance_predecessor_epoch": 2}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=0.9703 representation_loss=0.6472 clustering_loss=0.2782 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0157 lfss_li=1.6833 
+batch=0100 loss=0.8199 representation_loss=0.4823 clustering_loss=0.2824 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0285 lfss_li=1.6793 
+batch=0150 loss=1.0753 representation_loss=0.7495 clustering_loss=0.2724 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0207 lfss_li=1.6894 
+batch=0200 loss=0.9740 representation_loss=0.6438 clustering_loss=0.2943 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0188 lfss_li=1.6429 
+batch=0250 loss=1.0019 representation_loss=0.6785 clustering_loss=0.2745 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0183 lfss_li=1.6777 
+batch=0300 loss=0.9901 representation_loss=0.6420 clustering_loss=0.2863 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0276 lfss_li=1.7733 
+batch=0350 loss=0.9728 representation_loss=0.6399 clustering_loss=0.2783 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0256 lfss_li=1.6812 
+batch=0400 loss=1.0030 representation_loss=0.6895 clustering_loss=0.2517 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0205 lfss_li=1.6713 
+batch=0450 loss=1.0205 representation_loss=0.7013 clustering_loss=0.2483 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0202 lfss_li=1.7490 
+batch=0500 loss=1.0427 representation_loss=0.7086 clustering_loss=0.2630 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0326 lfss_li=1.6998 
+batch=0550 loss=0.9701 representation_loss=0.6447 clustering_loss=0.2717 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0200 lfss_li=1.6957 
+batch=0600 loss=1.0531 representation_loss=0.7434 clustering_loss=0.2428 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0178 lfss_li=1.7046 
+batch=0650 loss=1.0118 representation_loss=0.6813 clustering_loss=0.2494 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0286 lfss_li=1.7718 
+batch=0700 loss=0.9106 representation_loss=0.5774 clustering_loss=0.2695 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0246 lfss_li=1.7385 
+batch=0750 loss=1.0160 representation_loss=0.7024 clustering_loss=0.2522 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0184 lfss_li=1.6906 
+batch=0800 loss=0.9902 representation_loss=0.6844 clustering_loss=0.2421 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0157 lfss_li=1.6902 
+batch=0850 loss=0.9016 representation_loss=0.5845 clustering_loss=0.2570 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0219 lfss_li=1.6676 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/representation_history/epoch_003.pt samples=27305 cosine_previous=0.9990995526313782
+Train: loss=0.9751 mstm=0.6504 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=0.7835 lfss_ls=0.0218 lfss_li=1.6980 dec=0.2663
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/checkpoints/condtc_best.pt
+epoch=4 / num_epochs=6
+LFSS history: {"training_epoch": 4, "target_epoch": 3, "instance_predecessor_epoch": 3}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=0.9056 representation_loss=0.5894 clustering_loss=0.2589 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0177 lfss_li=1.6906 
+batch=0100 loss=0.9418 representation_loss=0.6291 clustering_loss=0.2520 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0207 lfss_li=1.6595 
+batch=0150 loss=1.0286 representation_loss=0.7267 clustering_loss=0.2571 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0115 lfss_li=1.6189 
+batch=0200 loss=0.9263 representation_loss=0.6138 clustering_loss=0.2424 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0182 lfss_li=1.7308 
+batch=0250 loss=1.0474 representation_loss=0.7305 clustering_loss=0.2519 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0204 lfss_li=1.7051 
+batch=0300 loss=0.9573 representation_loss=0.6496 clustering_loss=0.2453 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0207 lfss_li=1.6440 
+batch=0350 loss=0.8528 representation_loss=0.5322 clustering_loss=0.2709 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0184 lfss_li=1.6671 
+batch=0400 loss=0.9961 representation_loss=0.6846 clustering_loss=0.2484 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0186 lfss_li=1.6871 
+batch=0450 loss=0.9063 representation_loss=0.6042 clustering_loss=0.2411 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0135 lfss_li=1.6801 
+batch=0500 loss=0.8627 representation_loss=0.5536 clustering_loss=0.2297 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0229 lfss_li=1.7137 
+batch=0550 loss=0.8892 representation_loss=0.5948 clustering_loss=0.2256 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0153 lfss_li=1.6629 
+batch=0600 loss=1.0170 representation_loss=0.7028 clustering_loss=0.2576 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0182 lfss_li=1.6717 
+batch=0650 loss=0.8957 representation_loss=0.5847 clustering_loss=0.2446 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0166 lfss_li=1.7200 
+batch=0700 loss=1.0076 representation_loss=0.6959 clustering_loss=0.2491 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0171 lfss_li=1.7011 
+batch=0750 loss=0.8970 representation_loss=0.5992 clustering_loss=0.2388 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0135 lfss_li=1.6487 
+batch=0800 loss=0.9481 representation_loss=0.6383 clustering_loss=0.2505 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0176 lfss_li=1.6689 
+batch=0850 loss=0.8388 representation_loss=0.5388 clustering_loss=0.2205 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0204 lfss_li=1.6940 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/representation_history/epoch_004.pt samples=27305 cosine_previous=0.9992295503616333
+Train: loss=0.9447 mstm=0.6375 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=0.7585 lfss_ls=0.0180 lfss_li=1.6823 dec=0.2421
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/checkpoints/condtc_best.pt
+epoch=5 / num_epochs=6
+LFSS history: {"training_epoch": 5, "target_epoch": 4, "instance_predecessor_epoch": 4}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=0.9876 representation_loss=0.6864 clustering_loss=0.2332 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0200 lfss_li=1.6460 
+batch=0100 loss=0.9053 representation_loss=0.6022 clustering_loss=0.2344 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0183 lfss_li=1.6766 
+batch=0150 loss=0.8371 representation_loss=0.5493 clustering_loss=0.2210 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0131 lfss_li=1.6421 
+batch=0200 loss=0.9463 representation_loss=0.6492 clustering_loss=0.2331 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0124 lfss_li=1.6821 
+batch=0250 loss=1.0105 representation_loss=0.7206 clustering_loss=0.2280 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0120 lfss_li=1.6394 
+batch=0300 loss=0.9181 representation_loss=0.6121 clustering_loss=0.2401 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0135 lfss_li=1.7247 
+batch=0350 loss=0.9648 representation_loss=0.6599 clustering_loss=0.2313 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0209 lfss_li=1.6845 
+batch=0400 loss=0.8812 representation_loss=0.5897 clustering_loss=0.2277 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0136 lfss_li=1.6408 
+batch=0450 loss=0.8017 representation_loss=0.5143 clustering_loss=0.2166 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0134 lfss_li=1.6566 
+batch=0500 loss=0.9912 representation_loss=0.6986 clustering_loss=0.2317 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0161 lfss_li=1.6060 
+batch=0550 loss=1.0145 representation_loss=0.7181 clustering_loss=0.2239 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0175 lfss_li=1.6699 
+batch=0600 loss=0.9400 representation_loss=0.6470 clustering_loss=0.2279 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0145 lfss_li=1.6453 
+batch=0650 loss=0.9521 representation_loss=0.6259 clustering_loss=0.2283 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0361 lfss_li=1.7586 
+batch=0700 loss=1.0015 representation_loss=0.7042 clustering_loss=0.2227 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0140 lfss_li=1.7196 
+batch=0750 loss=0.8967 representation_loss=0.6123 clustering_loss=0.2154 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0126 lfss_li=1.6404 
+batch=0800 loss=0.9051 representation_loss=0.6186 clustering_loss=0.2051 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0185 lfss_li=1.6544 
+batch=0850 loss=0.9014 representation_loss=0.6197 clustering_loss=0.2146 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0108 lfss_li=1.6359 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/representation_history/epoch_005.pt samples=27305 cosine_previous=0.9993160367012024
+Train: loss=0.9256 mstm=0.6299 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=0.7431 lfss_ls=0.0152 lfss_li=1.6721 dec=0.2265
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/checkpoints/condtc_best.pt
+epoch=6 / num_epochs=6
+LFSS history: {"training_epoch": 6, "target_epoch": 5, "instance_predecessor_epoch": 5}
+history_contrast_enabled=False history_source_epoch=None
+history_encoder_source=None encoder_ema_updates_start=0
+batch=0050 loss=0.8581 representation_loss=0.5713 clustering_loss=0.2232 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0135 lfss_li=1.6171 
+batch=0100 loss=0.8448 representation_loss=0.5576 clustering_loss=0.2116 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0121 lfss_li=1.6937 
+batch=0150 loss=0.8774 representation_loss=0.5984 clustering_loss=0.2056 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0107 lfss_li=1.6544 
+batch=0200 loss=0.9047 representation_loss=0.6035 clustering_loss=0.2326 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0211 lfss_li=1.6381 
+batch=0250 loss=0.8424 representation_loss=0.5601 clustering_loss=0.2166 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0107 lfss_li=1.6334 
+batch=0300 loss=0.9651 representation_loss=0.6777 clustering_loss=0.2122 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0118 lfss_li=1.6940 
+batch=0350 loss=0.8970 representation_loss=0.6100 clustering_loss=0.2162 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0155 lfss_li=1.6350 
+batch=0400 loss=0.8262 representation_loss=0.5477 clustering_loss=0.2130 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0123 lfss_li=1.5966 
+batch=0450 loss=0.7587 representation_loss=0.4802 clustering_loss=0.2083 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0120 lfss_li=1.6235 
+batch=0500 loss=0.9811 representation_loss=0.6800 clustering_loss=0.2325 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0178 lfss_li=1.6706 
+batch=0550 loss=0.9946 representation_loss=0.7047 clustering_loss=0.2279 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0126 lfss_li=1.6328 
+batch=0600 loss=0.8620 representation_loss=0.5701 clustering_loss=0.2342 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0146 lfss_li=1.6021 
+batch=0650 loss=0.9107 representation_loss=0.6321 clustering_loss=0.2036 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0126 lfss_li=1.6414 
+batch=0700 loss=0.8832 representation_loss=0.5864 clustering_loss=0.2213 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0175 lfss_li=1.6872 
+batch=0750 loss=0.8801 representation_loss=0.5902 clustering_loss=0.2185 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0122 lfss_li=1.6840 
+batch=0800 loss=0.8888 representation_loss=0.5972 clustering_loss=0.2166 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0166 lfss_li=1.6659 
+batch=0850 loss=0.8111 representation_loss=0.5288 clustering_loss=0.2110 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_weighted=0.0000 lfss_ls=0.0116 lfss_li=1.6524 
+encoder_ema_updates_end=0
+representation diagnostic saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/representation_history/epoch_006.pt samples=27305 cosine_previous=0.999285101890564
+Train: loss=0.9023 mstm=0.6155 instance_nce=0.0000 cluster_nce=0.0000 history_nce=0.0000 history_nce_1to2=0.0000 history_nce_2to1=0.0000 history_nce_weighted=0.0000 history_applied_fraction=0.0000 base_loss=0.7223 lfss_ls=0.0138 lfss_li=1.6612 dec=0.2136
+save checkpoint:  /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/checkpoints/condtc_best.pt
+best base train_loss:  0.722314296410953
+evaluating: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/checkpoints/condtc_last.pt
+device: cuda
+dataset: portoTimeNoiseFineGrained
+cluster counts: tensor([ 931, 2164,  881, 1097, 1012, 1293,  999, 1462, 1604, 1088,  964, 1006,
+         987, 1017, 1046,    0, 1038,  914,  921,  739,  509, 1050,  472, 1080,
+        1215,  859,  957])
+metrics: {'uacc': 0.8604651162790697, 'nmi': 0.9204630582152648, 'ri': 0.9849297120197004, 'ari': 0.8017816473042719}
+metrics saved: /root/trajectory-clustering/con-dtc/runs/hrr/pre15/condtc_porto_dart_full_pre15/20260914_201014_seed777/metrics.json
