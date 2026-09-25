@@ -14,6 +14,10 @@ loss:
   cluster_temperature: 1.0
   instance_loss_weight: 0.0
   cluster_contrastive_loss_weight: 0.0
+  history_instance_loss_weight: 0.0
+  history_instance_temperature: 0.5
+  history_instance_start_epoch: 3
+  history_encoder_ema_momentum: null
 optimizer:
   representation_learning_rate: 5.0e-05
   clustering_learning_rate: 0.00015
@@ -24,6 +28,8 @@ training:
   log_interval: 50
   max_initialization_batches: null
   max_train_batches: null
+  save_representation_history: true
+  checkpoint_selection: best
 checkpoint:
   pretrain_path: checkpoints/sttraj2vec_porto_finegrained_pre15.pt
 target_history:
@@ -38,3 +44,4 @@ target_history:
   entropy_upper_quantile: null
   high_entropy_ema_alpha: 0.5
   minimum_weight: 1.5
+lfss: null

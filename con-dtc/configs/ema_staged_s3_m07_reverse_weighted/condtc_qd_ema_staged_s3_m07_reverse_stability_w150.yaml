@@ -41,6 +41,8 @@ training:
   # 与 S3/M0.7 及 W1.25 对照保持一致。
   num_epochs: 6
   seed: 19721013
+  # 保存固定原始输入的逐轮表示与软分配，用于分析样本分配的保持和纠错。
+  save_representation_history: true
   log_interval: 50
   max_initialization_batches: null
   max_train_batches: null
