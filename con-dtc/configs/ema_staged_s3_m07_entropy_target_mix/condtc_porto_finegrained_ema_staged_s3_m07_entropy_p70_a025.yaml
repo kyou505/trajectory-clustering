@@ -46,6 +46,8 @@ training:
   log_interval: 50
   max_initialization_batches: null
   max_train_batches: null
+  # 初始化后及每轮结束保存固定原始输入的分配，用于新增错误与纠错分析。
+  save_representation_history: true
 
 target_history:
   # epoch 1～2 使用当前跨视图 DEC target，epoch 3 起启用 EMA。
@@ -59,6 +61,8 @@ target_history:
   # 高熵样本使用 25% EMA target 与 75% 当前 target；
   # 其余约 70% 样本完全使用 EMA target。
   high_entropy_ema_alpha: 0.25
+  # 仅比较历史目标机制，不使用样本加权。
+  minimum_weight: null
 
 checkpoint:
   # 必须和 baseline 使用同一个 Porto 预训练 checkpoint。

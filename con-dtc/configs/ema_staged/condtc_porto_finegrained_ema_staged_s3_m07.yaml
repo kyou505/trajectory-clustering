@@ -1,0 +1,46 @@
+# Porto 纯延迟 EMA：与 P70/A0.25 熵插值配置保持相同训练条件。
+# 保存固定原始输入的逐轮分配，用于比较新增错误、纠错和错误遗留。
+experiment:
+  name: condtc_porto_finegrained_s3_m07
+  output_root: runs
+
+data:
+  dataset: portoTimeNoiseFineGrained
+  batch_size: 32
+  initialization_batch_size: 256
+
+model:
+  num_clusters: 27
+
+loss:
+  time_loss_weight: 0.1
+  clustering_loss_weight: 0.5
+  instance_temperature: 0.5
+  cluster_temperature: 1.0
+  instance_loss_weight: 0.0
+  cluster_contrastive_loss_weight: 0.0
+
+optimizer:
+  representation_learning_rate: 0.00005
+  clustering_learning_rate: 0.00015
+  weight_decay: 0.01
+
+training:
+  num_epochs: 6
+  seed: 42
+  log_interval: 50
+  max_initialization_batches: null
+  max_train_batches: null
+  # 初始化后及每轮结束保存固定原始输入的分配，不参与训练。
+  save_representation_history: true
+
+target_history:
+  # 第1～2轮使用当前目标，第3轮起使用历史 EMA 目标。
+  start_epoch: 3
+  momentum: 0.7
+  entropy_target_mix_enabled: false
+  # 关闭样本加权，隔离延迟 EMA 的作用。
+  minimum_weight: null
+
+checkpoint:
+  pretrain_path: checkpoints/sttraj2vec_porto_finegrained_pre15.pt
