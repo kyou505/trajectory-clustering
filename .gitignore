@@ -25,6 +25,8 @@ con-dtc/runs/**
 !con-dtc/runs/**/config.yaml
 !con-dtc/runs/**/metrics.json
 !con-dtc/runs/**/train.log
+# 历史对比的目录说明；检查点等二进制仍由上面的规则忽略。
+!con-dtc/runs/dart_history/README.md
 
 # Testing and coverage
 .pytest_cache/
@@ -44,3 +46,6 @@ Thumbs.db
 
 # Jupyter
 .ipynb_checkpoints/
+
+output/
+tmp/

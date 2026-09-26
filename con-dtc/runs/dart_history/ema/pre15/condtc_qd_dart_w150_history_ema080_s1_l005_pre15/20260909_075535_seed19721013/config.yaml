@@ -1,0 +1,44 @@
+experiment:
+  name: condtc_qd_dart_w150_history_s1_l005_ema080_pre15
+  output_root: runs/dart_history_ema_s1
+data:
+  dataset: qdTimeNoise0424
+  batch_size: 32
+  initialization_batch_size: 256
+model:
+  num_clusters: 12
+loss:
+  time_loss_weight: 0.1
+  clustering_loss_weight: 0.5
+  instance_temperature: 0.5
+  cluster_temperature: 1.0
+  instance_loss_weight: 0.0
+  cluster_contrastive_loss_weight: 0.0
+  history_instance_loss_weight: 0.05
+  history_instance_temperature: 0.5
+  history_instance_start_epoch: 1
+  history_encoder_ema_momentum: 0.8
+optimizer:
+  representation_learning_rate: 5.0e-05
+  clustering_learning_rate: 0.00015
+  weight_decay: 0.01
+training:
+  num_epochs: 6
+  seed: 19721013
+  log_interval: 50
+  max_initialization_batches: null
+  max_train_batches: null
+checkpoint:
+  pretrain_path: checkpoints/sttraj2vec_pretrain_paper_15ep.pt
+target_history:
+  momentum: 0.7
+  save_interval: 1
+  save_raw_assignments: true
+  start_epoch: 3
+  weight_warmup: false
+  weighting_signal: stability
+  entropy_target_mix_enabled: true
+  entropy_quantile: 0.7
+  entropy_upper_quantile: null
+  high_entropy_ema_alpha: 0.25
+  minimum_weight: 1.5

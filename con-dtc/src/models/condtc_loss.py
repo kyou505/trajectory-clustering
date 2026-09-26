@@ -1,3 +1,5 @@
+import math
+
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -15,11 +17,17 @@ class ConDTCTotalLoss(nn.Module):
             cluster_temperature=1.0,
             instance_loss_weight=1.0,
             cluster_contrastive_loss_weight=1.0,
+            history_instance_loss_weight=0.0,
+            history_instance_temperature=0.5,
     ):
         super().__init__()
         self.clustering_loss_weight = clustering_loss_weight
         self.instance_loss_weight = instance_loss_weight
         self.cluster_contrastive_loss_weight = cluster_contrastive_loss_weight
+        if not math.isfinite(history_instance_loss_weight) or history_instance_loss_weight < 0:
+            raise ValueError("history_instance_loss_weight must be finite and nonnegative")
+        self.history_instance_loss_weight = history_instance_loss_weight
+        self.history_instance_loss = CrossHistoryInfoNCELoss(history_instance_temperature)
         self.mstm_loss = MSTMLoss(
             time_loss_weight=time_loss_weight,
         )
@@ -46,6 +54,11 @@ class ConDTCTotalLoss(nn.Module):
             head_cl1,
             head_cl2,
             sample_weight=None,
+            z1=None,
+            z2=None,
+            history_z1=None,
+            history_z2=None,
+            history_contrastive_enabled=False,
     ):
         representation_losses = self.mstm_loss(
             location_logits=location_logits,
@@ -75,8 +88,26 @@ class ConDTCTotalLoss(nn.Module):
                       + clustering_losses["loss"] * self.clustering_loss_weight
                       + cluster_contrastive_loss * self.cluster_contrastive_loss_weight
                       + instance_contrastive_loss * self.instance_loss_weight)
+        # 仍按原始目标选择检查点，避免预热后启用辅助损失时，
+        # 仅因早期检查点尚未计入辅助损失，就将其误判为更优。
+        base_loss = total_loss
+        history_loss = history_1to2 = history_2to1 = zero
+        history_applied = zero
+        if history_contrastive_enabled and self.history_instance_loss_weight > 0:
+            history_terms = self.history_instance_loss(z1, z2, history_z1, history_z2)
+            history_loss = history_terms["loss"]
+            history_1to2 = history_terms["view1_to_history2"]
+            history_2to1 = history_terms["view2_to_history1"]
+            history_applied = zero.new_tensor(float(z1.size(0) > 1))
+            total_loss = total_loss + self.history_instance_loss_weight * history_loss
         return {
             "loss": total_loss,
+            "base_loss": base_loss,
+            "history_instance_loss": history_loss,
+            "history_instance_loss_view1_to_history2": history_1to2,
+            "history_instance_loss_view2_to_history1": history_2to1,
+            "history_instance_weighted_loss": history_loss * self.history_instance_loss_weight,
+            "history_instance_applied": history_applied,
             "representation_loss": representation_losses["loss"],
             "location_loss": representation_losses["location_loss"],
             "time_loss": representation_losses["time_loss"],
@@ -86,6 +117,41 @@ class ConDTCTotalLoss(nn.Module):
             "clustering_loss_view1": clustering_losses["loss_view1"],
             "clustering_loss_view2": clustering_losses["loss_view2"],
         }
+
+class CrossHistoryInfoNCELoss(nn.Module):
+    """在线视图 1 对比冻结的历史视图 2，在线视图 2 对比冻结的历史视图 1。
+
+    B × B 相似度矩阵的每行包含 1 个正样本（同一实例）和 B-1 个负样本。
+    所有锚点使用相同权重，DART 的 DEC 样本权重不参与该损失。
+    """
+
+    def __init__(self, temperature=0.5):
+        super().__init__()
+        if not math.isfinite(temperature) or temperature <= 0:
+            raise ValueError("history_instance_temperature must be finite and positive")
+        self.temperature = temperature
+
+    def forward(self, z1, z2, history_z1, history_z2):
+        features = (z1, z2, history_z1, history_z2)
+        if any(x is None or x.ndim != 2 for x in features):
+            raise ValueError("four [batch, embedding] tensors are required")
+        if any(x.shape != z1.shape for x in features):
+            raise ValueError("current and historical features must have matching shapes")
+        if z1.size(0) == 0 or z1.size(1) == 0:
+            raise ValueError("features must be nonempty")
+        if z1.size(0) == 1:
+            # 末尾批次只有一个样本时没有负样本，仅跳过对比损失，保留 DART 的其余计算。
+            loss12, loss21 = z1.sum() * 0.0, z2.sum() * 0.0
+        else:
+            online1, online2 = F.normalize(z1, dim=1), F.normalize(z2, dim=1)
+            old1 = F.normalize(history_z1.detach(), dim=1)
+            old2 = F.normalize(history_z2.detach(), dim=1)
+            targets = torch.arange(z1.size(0), device=z1.device)
+            loss12 = F.cross_entropy(online1 @ old2.T / self.temperature, targets)
+            loss21 = F.cross_entropy(online2 @ old1.T / self.temperature, targets)
+        return {"loss": 0.5 * (loss12 + loss21),
+                "view1_to_history2": loss12, "view2_to_history1": loss21}
+
 
 class InfoNCELoss(nn.Module):
     def __init__(

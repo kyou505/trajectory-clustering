@@ -1,0 +1,38 @@
+# PORTO：Baseline＋历史实例约束，补全两类历史机制的四组消融。
+# 相比对应DART-Full，仅关闭簇分配历史（target_history: null）；保留Baseline原有聚类损失。
+# 实例历史为上一轮在线编码器直接快照，第3轮开启；保存固定原始输入的逐轮表示。
+# 参数来源：condtc_porto_dart_full_history_direct_s3_l010_pre15.yaml
+experiment:
+  name: condtc_porto_baseline_history_direct_s3_l010_pre15
+  output_root: runs/baseline_representation_stability
+data:
+  dataset: portoTimeNoiseFineGrained
+  batch_size: 32
+  initialization_batch_size: 256
+model:
+  num_clusters: 27
+loss:
+  time_loss_weight: 0.1
+  clustering_loss_weight: 0.5
+  instance_temperature: 0.5
+  cluster_temperature: 1.0
+  instance_loss_weight: 0.0
+  cluster_contrastive_loss_weight: 0.0
+  history_instance_loss_weight: 0.1
+  history_instance_temperature: 0.5
+  history_instance_start_epoch: 3
+  history_encoder_ema_momentum: null
+optimizer:
+  representation_learning_rate: 5.0e-05
+  clustering_learning_rate: 0.00015
+  weight_decay: 0.01
+training:
+  num_epochs: 6
+  seed: 42
+  log_interval: 50
+  max_initialization_batches: null
+  max_train_batches: null
+  save_representation_history: true
+checkpoint:
+  pretrain_path: checkpoints/sttraj2vec_porto_finegrained_pre15.pt
+target_history: null
